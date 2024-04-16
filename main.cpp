@@ -27,7 +27,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ウィンドウクラス名
 	wc.lpszClassName = L"CG2WindowClass";
 	//インスタンスハンドル
-	wc.hInstance = DrvGetModuleHandle(nullptr);
+	wc.hInstance = GetModuleHandle(nullptr);
 	//カーソル
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	//ウィンドウクラスを登録する
@@ -40,7 +40,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//クライアント領域を元に実際のサイズにwrcを変更してもらう
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	
+	// ウィンドウの生成
+	HWND hwnd = CreateWindow(
+		wc.lpszClassName,		//利用するクラス名
+		L"CG2",					//タイトルバーの文字
+		WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル
+		CW_USEDEFAULT,			//表示X座標（windowsに任せる）
+		CW_USEDEFAULT,			//表示Y座標（windowsOSに任せる）
+		wrc.right - wrc.left,	//ウィンドウ横幅
+		wrc.bottom - wrc.top,	//ウィンドウ縦幅
+		nullptr,				//縦ウィンドウハンドル
+		nullptr,				//メニューハンドル
+		wc.hInstance,			//インスタンスハンドル
+		nullptr					//オプション
+	);
+
+	//ウィンドウを表示する
+	ShowWindow(hwnd, SW_SHOW);
+
+	MSG msg{};
+	//ウィンドウのxボタンが押されるまでループ
+	while (msg.message!=WM_QUIT){
+		//windowにメッセージが来てたら最優先で処理させる
+		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		} else{
+			//ゲームの処理
+		}
+	}
 
 	return 0;
 }
