@@ -275,6 +275,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));//4.end
 
 
+			//コマンドをキックする
+			// 1.CommandListが完成したので、CommandQueueを使ってGPUにキックする
+			// 2.実行が終わったら、画面が完成したので画面の交換をしてもらう
+			//	a.これは、SwapChain作成時に指定したCommandQueueを介して行われる
+			//	b.画面交換用のExecuteCommandListを行っていると考えると良い
+			// 3.画面の交換をしたら次のフレームの準備をする
+			//	a.実際に保存する場所を管理しているAllocatorとCommandListの両方をResetする
+
+			//GPUにコマンドリストの実行を行わせる
+			ID3D12CommandList* commandLists[] = { commandList };
+			commandQueue->ExecuteCommandLists(1, commandLists);//1.end
+
+			//GPUとOSに画面の交換を行うよう通知する
+			swapChain->Present(1, 0);//2.end
+
+			//次のフレーム用のコマンドリストを準備
+			hr = commandAllocator->Reset();
+			assert(SUCCEEDED(hr));
+			hr = commandList->Reset(commandAllocator,nullptr);
+			assert(SUCCEEDED(hr));//3.end
+
+
+
 		}
 	}
 
