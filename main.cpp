@@ -103,6 +103,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr					//オプション
 	);
 
+	//DebugLayerを表示する
+	// 1.デバックコントローラーを初期化する
+	// 2.デバックコントローラーに値が入るとif文が作動する
+	// 3.デバックレイヤーを有効化する
+	// 4.GPU側でもチェックを行うようにする
+
+#ifdef _DEBUG
+	ID3D12Debug1* debugController = nullptr;//1.end
+
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))){//2.end
+		//デバックレイヤーを有効化する。
+		debugController->EnableDebugLayer();//3.end
+
+		//さらにGPU側でもチェックを行うようにする
+		debugController->SetEnableSynchronizedCommandQueueValidation(TRUE);//4.end
+	}
+#endif // DEBUG
+
+
+
+
+
 	//文字列を格納する
 	std::string str0{ "STRING!!!" };
 
@@ -163,6 +185,56 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//デバイスの生成がうまくいかなかったので起動できない
 	assert(device != nullptr);
 	Log("Complete create D3D12Device!!!\n");//初期化完了ログを出す
+
+
+	//段階的に分けてエラーと警告を表示し、停止する。
+	// 1.インフォキューを生成する
+	// 2.インフォキューに値が入ったらif文が作動する
+	// 3.やばいエラーの時に作動する
+	// 4.エラーの時に止まる
+	// 5.警告時に止まる
+	// 6.何もなかったら開放する。
+
+#ifdef _DEBUG
+	ID3D12InfoQueue* infoQueue = nullptr;//1.end
+	if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {//2.end
+		//やばいエラーの時に止まる
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+
+		//エラーの時に止まる
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+
+		//警告時に止まる
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+
+		//開放
+		infoQueue->Release();
+
+		// エラーと警告の抑制（windowsの不具合によるエラー表示などを無視するための設定をする）
+		// 1.抑制するメッセージのIDを出す
+		// 2.抑制するレベルを設定する
+		// 3.指定したメッセージの表示を抑制する
+
+		//抑制するメッセージのID
+		D3D12_MESSAGE_ID denyIds[] = {
+			//Windows11でのDXGIデバックレイヤーとDXGIデバックレイヤーの相互作用バグによるエラーメッセージ
+			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
+		};//1.end
+
+		//抑制するレベル
+		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+		D3D12_INFO_QUEUE_FILTER filter{};
+		filter.DenyList.NumIDs = _countof(denyIds);
+		filter.DenyList.pIDList = denyIds;
+		filter.DenyList.NumSeverities = _countof(severities);
+		filter.DenyList.pSeverityList = severities;//2.end
+		
+		//指定したメッセージの表示を抑制する
+		infoQueue->PushStorageFilter(&filter);
+
+	}
+#endif // _DEBUG
+
 
 	//コマンドキューを生成する
 	ID3D12CommandQueue* commandQueue = nullptr;
