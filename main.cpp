@@ -479,6 +479,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPipelineStateDesc.pRootSignature = rootSignaturre;//RootSignature
 	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;//InputLayout
 	graphicsPipelineStateDesc.VS = {
+		vertexShaderBlob->GetBufferPointer(),vertexShaderBlob->GetBufferSize()
+	};//PixelShader
+	graphicsPipelineStateDesc.PS = {
 		pixelShaderBlob->GetBufferPointer(),pixelShaderBlob->GetBufferSize()
 	};//PixelShader
 	graphicsPipelineStateDesc.BlendState = blendDesc;//BlendState
