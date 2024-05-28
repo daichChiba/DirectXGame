@@ -10,6 +10,8 @@
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
+#include"Matrix.h"
+#include"Transform.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
@@ -79,6 +81,12 @@ struct Vector4 {
 	float z;
 	float w;
 };
+
+
+
+
+
+
 
 IDxcBlob* CompileShader(
 	//CompilerするShaderファイルへのパス
@@ -166,6 +174,10 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInDytes) {
 	vertexResourceDesc.SampleDesc.Count = 1;
 	//バッファの場合はこれにする決まり
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+
+
+
 	//実際に頂点リソースを作る
 	ID3D12Resource* resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
@@ -179,10 +191,11 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(
 	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
 	//ディスクリプタヒープの生成
 	ID3D12DescriptorHeap* descriptorHeap = nullptr;
-	D3D12_DESCRIPTOR_HEAP_DESC rtvDescriptorHeapDesc{};
-	rtvDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;//レンダーターゲットビュー用
-	rtvDescriptorHeapDesc.NumDescriptors = 2;//ダブルバッファ用に２つ。多くても別に構わない
-	HRESULT hr = device->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
+	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
+	descriptorHeapDesc.Type = heapType;
+	descriptorHeapDesc.NumDescriptors = numDescriptors;
+	descriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
 	//ディスクリプタヒープが作れなかったので起動できない
 	assert(SUCCEEDED(hr));
 	return descriptorHeap;
@@ -405,7 +418,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//RTV用のヒープでディスクリプタの数は2．RTVはShader内で触るものではないため、ShaderVisibleはfalse
 	ID3D12DescriptorHeap* rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 	//SRV用のヒープでディスクリプタの数は128。SRVはshader内で触るものなので、shaderVisibleはtrue
-	ID3D12DescriptorHeap* srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 128, true);
+	ID3D12DescriptorHeap* srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
 	
 
 	//SwapChainからResourceを引っ張ってくる
@@ -474,10 +487,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//RootParameter作成。複数設定できるので配列。今回は結果１つだけなので長さ１の配列
-	D3D12_ROOT_PARAMETER rootParameters[1] = {};
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
+	rootParameters[1].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
 	descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
 
@@ -561,12 +577,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//マテリアル用のリソースを作る。今回はcolor１つ分のサイズを用意する
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
-	//マテリアルにデータを書き込む
-	Vector4* materialDate = nullptr;
+
+
+
+	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを読み込む
+	Matrix4x4* wvpData = nullptr;
 	//書き込むためのアドレスを取得
-	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialDate));
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	//単位行列を書き込んでおく
+	*wvpData = MakeIdentity4x4();
+
+	//マテリアルにデータを書き込む
+	Vector4* materialData = nullptr;
+	//
+	Matrix4x4* transformationMatrixDate = nullptr;
+
+	//書き込むためのアドレスを取得
+	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDate));
+
 	//今回は赤を書き込んでみる
-	*materialDate = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
@@ -620,6 +653,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 	);
 
+	//Transform変数を作る
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+
+
 
 	MSG msg{};
 	//ウィンドウのxボタンが押されるまでループ
@@ -635,7 +673,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 			//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
-			ImGui::ShowDemoWindow();
+			//ImGui::ShowDemoWindow();
+			ImGui::Begin("Window");
+			//変える変数の名前,変えるデータ,変える速度
+			ImGui::DragFloat3("color", &materialData->x, 0.01f);
+			ImGui::End();
+
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			*wvpData = worldMatrix;
+
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			//WVPMatrixを作る
+			Matrix4x4 worldViewProjectionMatrix = Multply(worldMatrix, Multply(viewMatrix, projectionMatrix));
+			*transformationMatrixDate = worldViewProjectionMatrix;
 
 
 			//コマンドを積み込んで確定させる
@@ -690,6 +743,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			//マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			//wvp用のCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+
 			//　描画！！(DrawCall/ドローコール)。３頂点で１つのインスタンス。インスタンスについては今度
 			commandList->DrawInstanced(3, 1, 0, 0);
 

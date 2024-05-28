@@ -16,6 +16,9 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{08f30658-e27e-47ce-9f64-1e157d9105f1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{7f3a1645-c77b-4b54-b6f5-a368827d756e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -75,6 +78,24 @@
     </ClInclude>
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Matrix4x4.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Vector2.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Vector3.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Vector4.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
