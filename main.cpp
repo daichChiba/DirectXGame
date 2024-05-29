@@ -676,7 +676,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ImGui::ShowDemoWindow();
 			ImGui::Begin("Window");
 			//変える変数の名前,変えるデータ,変える速度
-			ImGui::DragFloat3("color", &materialData->x, 0.01f);
+			ImGui::ColorEdit3("color", &materialData->x);
 			ImGui::End();
 
 			transform.rotate.y += 0.03f;
