@@ -7,6 +7,8 @@
 #include<cassert>
 #include<dxgidebug.h>
 #include<dxcapi.h>
+#include<fstream>
+#include<sstream>
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
@@ -25,6 +27,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
+	Vector3 normal;
+};
+
+struct ModelData {
+	std::vector<VertexData> vertices;
 };
 
 //ウィンドウプロシージャ
@@ -296,7 +303,7 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 	return resource;
 }
 
-void UploadTexturData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages) {
+void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages) {
 	//Meta情報を取得
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	//全MipMapについて
@@ -317,6 +324,73 @@ void UploadTexturData(ID3D12Resource* texture, const DirectX::ScratchImage& mipI
 }
 
 
+ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+	//1.中で必要となる変数の宣言
+	ModelData modelData;			//構築するModelData
+	std::vector<Vector4> positions;	//位置
+	std::vector<Vector3> normals;	//法線
+	std::vector<Vector2> texcoords;	//テクスチャ座標
+	std::string line;				//ファイルから読んだ1行を格納するもの
+	//2.ファイルを開く
+	std::ifstream file(directoryPath + "/" + filename);	//ファイルを開く
+	assert(file.is_open());								//とりあえず開けなかったら止める
+	//3.実際にファイルを読み、ModelDataを構築していく
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;	//先頭の識別子を読む
+
+		// identifierに応じた処理
+
+		if (identifier == "v") {
+			Vector4 position;
+			s >> position.x >> position.y >> position.z;
+			position.x *= -1.0f;
+			position.w = 1.0f;
+			positions.push_back(position);
+		} else if (identifier == "vt") {
+			Vector2 texcoord;
+			s >> texcoord.x >> texcoord.y;
+			texcoords.push_back(texcoord);
+		} else if (identifier == "vn") {
+			Vector3 normal;
+			s >> normal.x >> normal.y >> normal.z;
+			normal.x *= -1.0f;
+			normals.push_back(normal);
+
+			//4.ModelDataを返す
+		} else if (identifier == "f") {
+			VertexData triangle[3];
+			//面は三角形限定。その他は未対応
+			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+				std::string vertexDefinition;
+				s >> vertexDefinition;
+				//頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+				std::istringstream v(vertexDefinition);
+				uint32_t elementIndices[3];
+				for (int32_t element = 0; element < 3; element++) {
+					std::string index;
+					std::getline(v, index, '/');
+					elementIndices[element] = std::stoi(index);
+				}
+				//要素へのIndexから、実際の要素の値を取得して、頂点を構築する
+				Vector4 position = positions[elementIndices[0] - 1];
+				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+				Vector3 normal = normals[elementIndices[2] - 1];
+				//VertexData vertex = { position,texcoord,normal };
+				//modelData.vertices.push_back(vertex);
+				triangle[faceVertex] = { position,texcoord,normal };
+			}
+			//頂点を逆順で登録することで、周り順を逆にする
+			modelData.vertices.push_back(triangle[2]);
+			modelData.vertices.push_back(triangle[1]);
+			modelData.vertices.push_back(triangle[0]);
+		}
+	}
+
+	return modelData;
+
+}
 
 
 //windowsアプリでのエントリーポイント(main関数)
@@ -746,10 +820,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			IID_PPV_ARGS(&graphicsPipelineState));
 		assert(SUCCEEDED(hr));
 
-		ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+		//モデル読み込み
+		ModelData modelData = LoadObjFile("resources/model", "plane.obj");
+
+		//頂点リソースを作る
+		ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 
 		//Sprite用の頂点リソースを作る
 		ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
+
+		ID3D12Resource* indexResourceSprite = CreateBufferResource(device, sizeof(uint32_t) * 6);
 
 		//マテリアル用のリソースを作る。今回はcolor１つ分のサイズを用意する
 		ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
@@ -791,7 +871,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// リソースの先頭のアドレスから使う
 		vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 		//　使用するリソースのサイズは頂点３つ分のサイズ
-		vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+		vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
 		//　1頂点あたりのサイズ
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -805,11 +885,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//1頂点あたりのサイズ
 		vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
 
+		D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
+		//リソースの先頭のアドレスから使う
+		indexBufferViewSprite.BufferLocation = indexResourceSprite->GetGPUVirtualAddress();
+		//使用するリソースのサイズはインデックス6つ分のサイズ
+		indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+		//インデックスはuint32_tとする
+		indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
+
 
 		//　頂点リソースにデータを書き込む
 		VertexData* vertexData = nullptr;
 		//書き込むためのアドレスを取得
-		vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+		vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));//書き込むためのアドレスを取得
+		std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());//頂点データをリソースにコピー
 		//左下
 		vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
 		vertexData[0].texcoord = { 0.0f,1.0f };
@@ -849,6 +938,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		vertexDataSprite[4].texcoord = { 1.0f,0.0f };
 		vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };//右下
 		vertexDataSprite[5].texcoord = { 1.0f,1.0f };
+
+
+		//インデックスリソースにデータを書き込む
+		uint32_t* indexDataSprite = nullptr;
+		indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+		indexDataSprite[0] = 0;
+		indexDataSprite[1] = 1;
+		indexDataSprite[2] = 2;
+		indexDataSprite[3] = 1;
+		indexDataSprite[4] = 3;
+		indexDataSprite[5] = 2;
 
 		//ビューポート
 		D3D12_VIEWPORT viewport{};
@@ -892,7 +992,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 		const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 		ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
-		UploadTexturData(textureResource, mipImages);
+		UploadTextureData(textureResource, mipImages);
 
 
 		// metaDataを基にSRVの設定
@@ -931,6 +1031,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::Begin("Window");
 				//変える変数の名前,変えるデータ,変える速度
 				ImGui::ColorEdit3("color", &materialData->x);
+				//ImGui::DragFloat3("CameraTranslate", &cameraTransform, 0.01f);
+				//ImGui::DragFloat3("CameraTranslate", &cameraRotate.x, 0.01f);
+				//ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
 				ImGui::End();
 
 				transform.rotate.y += 0.03f;
@@ -1013,15 +1116,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//指定した深度で画面全体をクリアする
 				commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-				//　描画！！(DrawCall/ドローコール)。３頂点で１つのインスタンス。インスタンスについては今度
-				commandList->DrawInstanced(6, 1, 0, 0);
+				////　描画！！(DrawCall/ドローコール)。３頂点で１つのインスタンス。インスタンスについては今度
+				commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
 
 				//Spriteの描画
 				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 				//TransformationMatrixCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-				//描画!(DrawCall/ドローコール)
-				commandList->DrawInstanced(6, 1, 0, 0);
+				////描画!(DrawCall/ドローコール)
+				//commandList->DrawInstanced(6, 1, 0, 0);
+
+				//頂点インデックスの描画
+				commandList->IASetIndexBuffer(&indexBufferViewSprite);
+				////描画！(DrawCall/ドローコール)6このインデックスを使用し1つのインスタンスを描画。その他は当面0でよい
+				//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 
 				//　実際のcommandListのImGuiの描画コマンドを積む
