@@ -30,8 +30,13 @@ struct VertexData {
 	Vector3 normal;
 };
 
+struct MaterialData {
+	std::string textureFilePath;
+};
+
 struct ModelData {
 	std::vector<VertexData> vertices;
+	MaterialData material;
 };
 
 //ウィンドウプロシージャ
@@ -323,6 +328,33 @@ void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mip
 	}
 }
 
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+	//1.中で必要となる実数の宣言
+	MaterialData materialData;
+	std::string line;
+	//2.ファイルを開く
+	std::ifstream file(directoryPath + "/" + filename);
+	assert(file.is_open());
+
+	//3.実際にファイルを読み、MatrialDataを構築していく
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+
+		// identifierに応じた処理
+		if (identifier == "map_Kd") {
+			std::string textureFilename;
+			s >> textureFilename;
+			//連結してファイルパスにする
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+	}
+	//4.MaterialDataを返す
+	return materialData;
+}
+
+
 
 ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
 	//1.中で必要となる変数の宣言
@@ -377,14 +409,26 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 				Vector4 position = positions[elementIndices[0] - 1];
 				Vector2 texcoord = texcoords[elementIndices[1] - 1];
 				Vector3 normal = normals[elementIndices[2] - 1];
-				//VertexData vertex = { position,texcoord,normal };
-				//modelData.vertices.push_back(vertex);
+				position.x *= -1.0f;
+				normal.x *= -1.0f;
+				position.y *= -1.0f;
+				normal.y *= -1.0f;
+				//texcoord.y = 1.0f - texcoord.y;
+				VertexData vertex = { position,texcoord,normal };
+				modelData.vertices.push_back(vertex);
 				triangle[faceVertex] = { position,texcoord,normal };
 			}
 			//頂点を逆順で登録することで、周り順を逆にする
 			modelData.vertices.push_back(triangle[2]);
 			modelData.vertices.push_back(triangle[1]);
 			modelData.vertices.push_back(triangle[0]);
+		} else if (identifier=="mmtllib"){
+		//materialTemplateLibraryファイルの名前を取得する
+			std::string materialFilename;
+			s >> materialFilename;
+			//基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+
 		}
 	}
 
@@ -899,25 +943,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//書き込むためのアドレスを取得
 		vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));//書き込むためのアドレスを取得
 		std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());//頂点データをリソースにコピー
-		//左下
-		vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
-		vertexData[0].texcoord = { 0.0f,1.0f };
-		//上
-		vertexData[1].position = { 0.0f,0.5f,0.0f,1.0f };
-		vertexData[1].texcoord = { 0.5f,0.0f };
-		//右下
-		vertexData[2].position = { 0.5f,-0.5f,0.0f,1.0f };
-		vertexData[2].texcoord = { 1.0f,1.0f };
+		////左下
+		//vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
+		//vertexData[0].texcoord = { 0.0f,1.0f };
+		////上
+		//vertexData[1].position = { 0.0f,0.5f,0.0f,1.0f };
+		//vertexData[1].texcoord = { 0.5f,0.0f };
+		////右下
+		//vertexData[2].position = { 0.5f,-0.5f,0.0f,1.0f };
+		//vertexData[2].texcoord = { 1.0f,1.0f };
 
-		//左下2
-		vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
-		vertexData[3].texcoord = { 0.0f,1.0f };
-		//上2
-		vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
-		vertexData[4].texcoord = { 0.5f,0.0f };
-		//右下2
-		vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
-		vertexData[5].texcoord = { 1.0f,1.0f };
+		////左下2
+		//vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
+		//vertexData[3].texcoord = { 0.0f,1.0f };
+		////上2
+		//vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
+		//vertexData[4].texcoord = { 0.5f,0.0f };
+		////右下2
+		//vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
+		//vertexData[5].texcoord = { 1.0f,1.0f };
 
 		//頂点リソースのにデータを書き込む(Sprite)
 		VertexData* vertexDataSprite = nullptr;
@@ -994,6 +1038,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
 		UploadTextureData(textureResource, mipImages);
 
+		//DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
+
+		
+
 
 		// metaDataを基にSRVの設定
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -1034,6 +1082,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//ImGui::DragFloat3("CameraTranslate", &cameraTransform, 0.01f);
 				//ImGui::DragFloat3("CameraTranslate", &cameraRotate.x, 0.01f);
 				//ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+				ImGui::DragFloat3("spriteRotato", &transformSprite.rotate.x, 0.01f);
+				ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
+				ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
+				ImGui::DragFloat3("modelRotato", &transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
+				ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
 				ImGui::End();
 
 				transform.rotate.y += 0.03f;
@@ -1125,12 +1179,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//TransformationMatrixCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 				////描画!(DrawCall/ドローコール)
-				//commandList->DrawInstanced(6, 1, 0, 0);
+				commandList->DrawInstanced(6, 1, 0, 0);
 
 				//頂点インデックスの描画
 				commandList->IASetIndexBuffer(&indexBufferViewSprite);
 				////描画！(DrawCall/ドローコール)6このインデックスを使用し1つのインスタンスを描画。その他は当面0でよい
-				//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 
 				//　実際のcommandListのImGuiの描画コマンドを積む
