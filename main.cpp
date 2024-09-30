@@ -919,6 +919,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//　1頂点あたりのサイズ
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
+
 		//以下の4つはSprite用
 		//頂点バッファビューを作成する
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
