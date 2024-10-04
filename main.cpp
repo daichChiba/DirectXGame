@@ -65,7 +65,7 @@ std::wstring ConvertString(const std::string& str) {
 	if (str.empty()) {
 		return std::wstring();
 	}
-
+	
 	auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
 	if (sizeNeeded == 0) {
 		return std::wstring();
@@ -803,12 +803,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 		//Shaderをコンパイルする
-		IDxcBlob* vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
+		IDxcBlob* vertexShaderBlob = CompileShader(L"Resources/shaders/Object3D.VS.hlsl",
 			L"vs_6_0", dxcUtils, dxcCompiler, includeHandler
 		);
 		assert(vertexShaderBlob != nullptr);
 
-		IDxcBlob* pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl",
+		IDxcBlob* pixelShaderBlob = CompileShader(L"Resources/shaders/Object3D.PS.hlsl",
 			L"ps_6_0", dxcUtils, dxcCompiler, includeHandler
 		);
 		assert(pixelShaderBlob != nullptr);
