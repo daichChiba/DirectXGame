@@ -436,6 +436,23 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 
 }
 
+enum BlendMode {
+	//!<ブレンドなし
+	kBlendModeNone,
+	//!<通常αブレンド。デフォルト。Src*SrcA+Dest*(1-SrcA)
+	kBlendModeNormal,
+	//!<加算。Scr*SrcA+Dest*1
+	kBlendModeAdd,
+	//!<減算。Dest*1-Scr*SrcA
+	kBlendModeSubtract,
+	//!<乗算。Scr*0+Dest*Src
+	kBlendModeMultily,
+	//!<スクリーン。Scr*(Dest-1)+Dest1
+	kBlendModeScreen,
+	//!利用してはいけない
+	kCountOfBlendMode,
+};
+
 
 //windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -742,7 +759,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 		//RootParameter作成。複数設定できるので配列。今回は結果１つだけなので長さ１の配列
-		D3D12_ROOT_PARAMETER rootParameters[3] = {};
+		D3D12_ROOT_PARAMETER rootParameters[4] = {};
 		rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 		rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 		rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
@@ -755,6 +772,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//VertexShaderで使う
 		rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
 		rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);//Tableで利用する数
+
+		//rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+		//rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+		//rootParameters[3].Descriptor.ShaderRegister = 1;//レジスタ番号0とバインド
 
 		descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
 		descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
@@ -794,6 +815,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//すべての色要素を書き込む
 		blendDesc.RenderTarget[0].RenderTargetWriteMask =
 			D3D12_COLOR_WRITE_ENABLE_ALL;
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+
+		//通常
+		//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		//すでに書き込まれている色(デストカラー)
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+
+
+		//α値のブレンド設定
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+
 
 		//RasiterzerStateの設定
 		D3D12_RASTERIZER_DESC resterizerDesc{};
