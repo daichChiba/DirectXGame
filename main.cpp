@@ -60,12 +60,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 	//　標準のメッセージ処理を行う
 	return DefWindowProc(hwnd, msg, wparam, lparam);
+
 }
 std::wstring ConvertString(const std::string& str) {
 	if (str.empty()) {
 		return std::wstring();
 	}
-	
+
 	auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
 	if (sizeNeeded == 0) {
 		return std::wstring();
@@ -422,8 +423,8 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			modelData.vertices.push_back(triangle[2]);
 			modelData.vertices.push_back(triangle[1]);
 			modelData.vertices.push_back(triangle[0]);
-		} else if (identifier=="mmtllib"){
-		//materialTemplateLibraryファイルの名前を取得する
+		} else if (identifier == "mmtllib") {
+			//materialTemplateLibraryファイルの名前を取得する
 			std::string materialFilename;
 			s >> materialFilename;
 			//基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
@@ -442,8 +443,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//COMの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 
-	//出力ウィンドウへの文字出力
-	OutputDebugStringA("Hello,DirectX!");
+	////出力ウィンドウへの文字出力
+	//OutputDebugStringA("Hello,DirectX!");
 
 	WNDCLASS wc{};
 	//ウィンドウプロシージャ
@@ -460,6 +461,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const int32_t kClientWidth = 1280;
 	const int32_t kClientHeight = 720;
 	RECT wrc = { 0,0,kClientWidth,kClientHeight };
+
 
 	//クライアント領域を元に実際のサイズにwrcを変更してもらう
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
@@ -604,6 +606,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			filter.DenyList.pIDList = denyIds;
 			filter.DenyList.NumSeverities = _countof(severities);
 			filter.DenyList.pSeverityList = severities;//2.end
+
 
 			//指定したメッセージの表示を抑制する
 			infoQueue->PushStorageFilter(&filter);
@@ -867,6 +870,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//モデル読み込み
 		ModelData modelData = LoadObjFile("resources/model", "plane.obj");
 
+
 		//頂点リソースを作る
 		ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 
@@ -943,7 +947,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		VertexData* vertexData = nullptr;
 		//書き込むためのアドレスを取得
 		vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));//書き込むためのアドレスを取得
-		std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());//頂点データをリソースにコピー
+		std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());//頂点データをリソースにコピー
 		////左下
 		//vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
 		//vertexData[0].texcoord = { 0.0f,1.0f };
@@ -985,15 +989,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		vertexDataSprite[5].texcoord = { 1.0f,1.0f };
 
 
-		//インデックスリソースにデータを書き込む
-		uint32_t* indexDataSprite = nullptr;
-		indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
-		indexDataSprite[0] = 0;
-		indexDataSprite[1] = 1;
-		indexDataSprite[2] = 2;
-		indexDataSprite[3] = 1;
-		indexDataSprite[4] = 3;
-		indexDataSprite[5] = 2;
+		////インデックスリソースにデータを書き込む
+		//uint32_t* indexDataSprite = nullptr;
+		//indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+		//indexDataSprite[0] = 0;
+		//indexDataSprite[1] = 1;
+		//indexDataSprite[2] = 2;
+		//indexDataSprite[3] = 1;
+		//indexDataSprite[4] = 3;
+		//indexDataSprite[5] = 2;
 
 		//ビューポート
 		D3D12_VIEWPORT viewport{};
@@ -1041,7 +1045,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
 
-		
+
 
 
 		// metaDataを基にSRVの設定
@@ -1091,7 +1095,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
 				ImGui::End();
 
-				transform.rotate.y += 0.03f;
+				//transform.rotate.y += 0.03f;
 				Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 				*wvpData = worldMatrix;
 
@@ -1152,6 +1156,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
 				commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
+
 				//　コマンドを積む(三角形の描画)
 				commandList->RSSetViewports(1, &viewport);//Viewportを設定
 				commandList->RSSetScissorRects(1, &scissorRect);//Scirssorを設定
@@ -1182,10 +1187,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				////描画!(DrawCall/ドローコール)
 				commandList->DrawInstanced(6, 1, 0, 0);
 
-				//頂点インデックスの描画
-				commandList->IASetIndexBuffer(&indexBufferViewSprite);
-				////描画！(DrawCall/ドローコール)6このインデックスを使用し1つのインスタンスを描画。その他は当面0でよい
-				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+				////頂点インデックスの描画
+				//commandList->IASetIndexBuffer(&indexBufferViewSprite);
+				//////描画！(DrawCall/ドローコール)6このインデックスを使用し1つのインスタンスを描画。その他は当面0でよい
+				//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 
 				//　実際のcommandListのImGuiの描画コマンドを積む
@@ -1268,6 +1273,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		useAdapter->Release();
 		dxgiFactory->Release();
 
+		dsvDescriptorHeap->Release();
+		srvDescriptorHeap->Release();
+		textureResource->Release();
+		wvpResource->Release();
+		debugController->Release();
+		infoQueue->Release();
+		dxcUtils->Release();
+		dxcCompiler->Release();
+		includeHandler->Release();
+		depthStencilResorce->Release();
+		transformationMatrixResourceSprite->Release();
+		mipImages.Release();
+
+
 		vertexResource->Release();
 		graphicsPipelineState->Release();
 		signatureBlob->Release();
@@ -1301,6 +1320,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 
-	}
-	return 0;
+		}
+		return 0;
 }
