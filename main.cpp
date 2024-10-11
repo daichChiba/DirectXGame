@@ -757,6 +757,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
 		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;//Offsetを自動計算
 
+		D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
+		descriptorRangeForInstancing[0].BaseShaderRegister = 0;
+		descriptorRangeForInstancing[0].NumDescriptors = 1;
+		descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 		//RootParameter作成。複数設定できるので配列。今回は結果１つだけなので長さ１の配列
 		D3D12_ROOT_PARAMETER rootParameters[4] = {};
@@ -770,8 +775,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//DescriptorTableを使う
 		rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//VertexShaderで使う
-		rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
-		rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);//Tableで利用する数
+		rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;//Tableの中身の配列を指定
+		rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);//Tableで利用する数
 
 		//rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 		//rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
@@ -944,8 +949,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		assert(SUCCEEDED(hr));
 
 		//モデル読み込み
-		//ModelData modelData = LoadObjFile("resources/model", "plane.obj");
-		ModelData modelData = LoadObjFile("resources/model", "fence.obj");
+		ModelData modelData = LoadObjFile("resources/model", "plane.obj");
+		//ModelData modelData = LoadObjFile("resources/model", "fence.obj");
 
 		//頂点リソースを作る
 		ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -1113,8 +1118,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 		//Textureを読んで転送する
-		//DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
-		DirectX::ScratchImage mipImages = LoadTexture("resources/model/fence.png");
+		DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
+		//DirectX::ScratchImage mipImages = LoadTexture("resources/model/fence.png");
 		const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 		ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
 		UploadTextureData(textureResource, mipImages);
@@ -1170,7 +1175,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
 				ImGui::End();
 
-				transform.rotate.y += 0.03f;
+				//transform.rotate.y += 0.03f;
 				Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 				*wvpData = worldMatrix;
 
@@ -1251,15 +1256,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 				////　描画！！(DrawCall/ドローコール)。３頂点で１つのインスタンス。インスタンスについては今度
-				commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+				//commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+				commandList->DrawInstanced(UINT(modelData.vertices.size()), 10, 0, 0);
 
 
-				//Spriteの描画
-				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-				//TransformationMatrixCBufferの場所を設定
-				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-				////描画!(DrawCall/ドローコール)
-				commandList->DrawInstanced(6, 1, 0, 0);
+				////Spriteの描画
+				//commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+				////TransformationMatrixCBufferの場所を設定
+				//commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+				//////描画!(DrawCall/ドローコール)
+				//commandList->DrawInstanced(6, 1, 0, 0);
 
 				//頂点インデックスの描画
 				commandList->IASetIndexBuffer(&indexBufferViewSprite);
