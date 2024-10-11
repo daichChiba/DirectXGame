@@ -818,13 +818,54 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		blendDesc.RenderTarget[0].BlendEnable = TRUE;
 
 		//通常
-		//これから書き込む色。PixelShaderから出力する色(ソースカラー)
-		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-		//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
-		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-		//すでに書き込まれている色(デストカラー)
-		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		if(kBlendModeNormal){
+			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			//すでに書き込まれている色(デストカラー)
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		}
 
+		//加算
+		if (kBlendModeAdd) {
+			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			//すでに書き込まれている色(デストカラー)
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+		}
+
+		//減算
+		if (kBlendModeSubtract) {
+			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+			//すでに書き込まれている色(デストカラー)
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		}
+
+		//乗算
+		if (kBlendModeMultily) {
+			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			//すでに書き込まれている色(デストカラー)
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+		}
+
+		//スクリーン合成
+		if (kBlendModeScreen) {
+			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			//すでに書き込まれている色(デストカラー)
+			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+		}
 
 		//α値のブレンド設定
 		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
@@ -903,7 +944,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		assert(SUCCEEDED(hr));
 
 		//モデル読み込み
-		ModelData modelData = LoadObjFile("resources/model", "plane.obj");
+		//ModelData modelData = LoadObjFile("resources/model", "plane.obj");
+		ModelData modelData = LoadObjFile("resources/model", "fence.obj");
 
 		//頂点リソースを作る
 		ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -1071,7 +1113,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 		//Textureを読んで転送する
-		DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
+		//DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
+		DirectX::ScratchImage mipImages = LoadTexture("resources/model/fence.png");
 		const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 		ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
 		UploadTextureData(textureResource, mipImages);
@@ -1096,7 +1139,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		// SRVの生成
 		device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
-
 
 
 		MSG msg{};
