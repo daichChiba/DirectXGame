@@ -736,7 +736,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
 
-
 		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
 		descriptorRange[0].BaseShaderRegister = 0; //0から始まる
 		descriptorRange[0].NumDescriptors = 1;//数は１つ
