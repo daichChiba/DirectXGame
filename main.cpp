@@ -9,6 +9,7 @@
 #include<dxcapi.h>
 #include<fstream>
 #include<sstream>
+#include <wrl.h>
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
@@ -23,6 +24,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
+
 
 struct VertexData {
 	Vector4 position;
@@ -892,7 +894,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//RasiterzerStateの設定
 		D3D12_RASTERIZER_DESC resterizerDesc{};
 		//裏側(時計回り)を表示しない
-		resterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+		resterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 		//三角形の中を塗りつぶす
 		resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
@@ -1160,6 +1162,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
+		Transform transforms[kNumInstance];
+		for (uint32_t index = 0; index < kNumInstance; ++index){
+			transforms[index].scale = { 1.0f,1.0f,1.0f };
+			transforms[index].rotate = { 0.0f,0.0f,0.0f };
+			transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		}
+
+
+
+
+
 		//Textureを読んで転送する
 		DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 		//DirectX::ScratchImage mipImages = LoadTexture("resources/model/fence.png");
@@ -1236,6 +1249,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Matrix4x4 worldViewProjectionMatrixSprite = Multply(worldMatrixSprite, Multply(viewMatrixSprite, projectionMatrixSprite));
 				*transformtionMatrixDataSprite = worldViewProjectionMatrixSprite;
 
+				for (uint32_t index = 0; index < kNumInstance; index++){
+					Matrix4x4 worldMatrixs = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+					Matrix4x4 worldViewProjectionMatrixs = Multply(worldMatrixs, viewMatrix);
+					instancingData[index].WVP = worldViewProjectionMatrixs;
+					instancingData[index].World = worldMatrixs;
+				}
 
 				//コマンドを積み込んで確定させる
 				// 1.2つあるResourceのうち、どちらが今BackBufferなのかをSwapChainに問い合わせる
@@ -1293,14 +1312,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//wvp用のCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 				// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+				commandList->SetGraphicsRootDescriptorTable(2, instancingSrvHandleGPU);
 
 				//指定した深度で画面全体をクリアする
 				commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 				////　描画！！(DrawCall/ドローコール)。３頂点で１つのインスタンス。インスタンスについては今度
 				//commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
-				commandList->DrawInstanced(UINT(modelData.vertices.size()), 10, 0, 0);
+				commandList->DrawInstanced(UINT(modelData.vertices.size()), kNumInstance, 0, 0);
 
 
 				////Spriteの描画
@@ -1406,6 +1425,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		pixelShaderBlob->Release();
 		vertexShaderBlob->Release();
 		materialResource->Release();
+
 
 #ifdef _DEBUG
 		debugController->Release();
