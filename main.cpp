@@ -13,6 +13,7 @@
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
 #include"externals/DirectXTex/DirectXTex.h"
+#include"input.h"
 
 #include"Matrix.h"
 #include"Transform.h"
@@ -21,7 +22,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
-#pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 
 struct VertexData {
@@ -563,6 +563,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//デバイスの生成がうまくいかなかったので起動できない
 		assert(device != nullptr);
 		Log("Complete create D3D12Device!!!\n");//初期化完了ログを出す
+
+		//ポインタ
+		Input* input = nullptr;
+
+		//入力の初期化
+		input = new Input();
+		input->Initialize(wc.hInstance,hwnd);
 
 
 		//段階的に分けてエラーと警告を表示し、停止する。
@@ -1296,6 +1303,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		pixelShaderBlob->Release();
 		vertexShaderBlob->Release();
 		materialResource->Release();
+
+		//入力開放
+		delete input;
 
 #ifdef _DEBUG
 		debugController->Release();
