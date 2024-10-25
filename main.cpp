@@ -769,6 +769,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
 		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;//Offsetを自動計算
 
+		//instancing
 		D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
 		descriptorRangeForInstancing[0].BaseShaderRegister = 0;
 		descriptorRangeForInstancing[0].NumDescriptors = 1;
@@ -834,60 +835,60 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			D3D12_COLOR_WRITE_ENABLE_ALL;
 		blendDesc.RenderTarget[0].BlendEnable = TRUE;
 
-		//通常
-		if(kBlendModeNormal){
+		////通常
+		//if(kBlendModeNormal){
 			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
 			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
 			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 			//すでに書き込まれている色(デストカラー)
 			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-		}
+		//}
 
-		//加算
-		if (kBlendModeAdd) {
-			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
-			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
-			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-			//すでに書き込まれている色(デストカラー)
-			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-		}
+		////加算
+		//if (kBlendModeAdd) {
+		//	//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+		//	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		//	//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+		//	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		//	//すでに書き込まれている色(デストカラー)
+		//	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+		//}
 
-		//減算
-		if (kBlendModeSubtract) {
-			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
-			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
-			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
-			//すでに書き込まれている色(デストカラー)
-			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-		}
+		////減算
+		//if (kBlendModeSubtract) {
+		//	//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+		//	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		//	//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+		//	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+		//	//すでに書き込まれている色(デストカラー)
+		//	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		//}
 
-		//乗算
-		if (kBlendModeMultily) {
-			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
-			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
-			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
-			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-			//すでに書き込まれている色(デストカラー)
-			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
-		}
+		////乗算
+		//if (kBlendModeMultily) {
+		//	//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+		//	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+		//	//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+		//	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		//	//すでに書き込まれている色(デストカラー)
+		//	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+		//}
 
-		//スクリーン合成
-		if (kBlendModeScreen) {
-			//これから書き込む色。PixelShaderから出力する色(ソースカラー)
-			blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
-			//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
-			blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-			//すでに書き込まれている色(デストカラー)
-			blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-		}
+		////スクリーン合成
+		//if (kBlendModeScreen) {
+		//	//これから書き込む色。PixelShaderから出力する色(ソースカラー)
+		//	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+		//	//これから書き込むα。PixelShaderから出力するα値(ソースアルファ)
+		//	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		//	//すでに書き込まれている色(デストカラー)
+		//	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+		//}
 
-		//α値のブレンド設定
-		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+		////α値のブレンド設定
+		//blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		//blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		//blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 
 
@@ -899,12 +900,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 		//Shaderをコンパイルする
-		IDxcBlob* vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
+		IDxcBlob* vertexShaderBlob = CompileShader(L"Particle.VS.hlsl",
 			L"vs_6_0", dxcUtils, dxcCompiler, includeHandler
 		);
 		assert(vertexShaderBlob != nullptr);
 
-		IDxcBlob* pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl",
+		IDxcBlob* pixelShaderBlob = CompileShader(L"Particle.PS.hlsl",
 			L"ps_6_0", dxcUtils, dxcCompiler, includeHandler
 		);
 		assert(pixelShaderBlob != nullptr);
@@ -982,7 +983,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//マテリアル用のリソースを作る。今回はcolor１つ分のサイズを用意する
 		ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
 
-		
+		//Transform作成
 		const uint32_t kNumInstance = 10;	//インスタンス数
 		//Instancing用のTransformationnMatrixリソースを作る
 		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(TransformationMatrix) * kNumInstance);
@@ -1251,7 +1252,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				for (uint32_t index = 0; index < kNumInstance; index++){
 					Matrix4x4 worldMatrixs = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
-					Matrix4x4 worldViewProjectionMatrixs = Multply(worldMatrixs, viewMatrix);
+					Matrix4x4 worldViewProjectionMatrixs = Multply(worldMatrixs, projectionMatrix);
 					instancingData[index].WVP = worldViewProjectionMatrixs;
 					instancingData[index].World = worldMatrixs;
 				}
@@ -1309,8 +1310,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				//マテリアルCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-				//wvp用のCBufferの場所を設定
-				commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+				////wvp用のCBufferの場所を設定
+				//commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 				// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 				commandList->SetGraphicsRootDescriptorTable(2, instancingSrvHandleGPU);
 
@@ -1329,10 +1330,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//////描画!(DrawCall/ドローコール)
 				//commandList->DrawInstanced(6, 1, 0, 0);
 
-				//頂点インデックスの描画
-				commandList->IASetIndexBuffer(&indexBufferViewSprite);
-				////描画！(DrawCall/ドローコール)6このインデックスを使用し1つのインスタンスを描画。その他は当面0でよい
-				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+				////頂点インデックスの描画
+				//commandList->IASetIndexBuffer(&indexBufferViewSprite);
+				//////描画！(DrawCall/ドローコール)6このインデックスを使用し1つのインスタンスを描画。その他は当面0でよい
+				//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 
 				//　実際のcommandListのImGuiの描画コマンドを積む
@@ -1425,7 +1426,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		pixelShaderBlob->Release();
 		vertexShaderBlob->Release();
 		materialResource->Release();
-
+		instancingResource->Release();
+		indexResourceSprite->Release();
 
 #ifdef _DEBUG
 		debugController->Release();
