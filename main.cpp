@@ -782,21 +782,41 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 		rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
 
-		rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+		//rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+		//rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
+		//rootParameters[1].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
+		rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//DescriptorTableを使う
 		rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
-		rootParameters[1].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
+		rootParameters[1].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;//Tableの中身の配列を指定
+		rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);//Tableで利用する数
+
 
 		rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//DescriptorTableを使う
 		rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//VertexShaderで使う
-		rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;//Tableの中身の配列を指定
-		rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);//Tableで利用する数
-
+		rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
+		rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);//Tableで利用する数
 		//rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 		//rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 		//rootParameters[3].Descriptor.ShaderRegister = 1;//レジスタ番号0とバインド
 
 		descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
 		descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
+
+
+
+		//Transform作成
+		const uint32_t kNumInstance = 10;	//インスタンス数
+		//Instancing用のTransformationnMatrixリソースを作る
+		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(TransformationMatrix) * kNumInstance);
+		//書き込むためのアドレスを取得
+		TransformationMatrix* instancingData = nullptr;
+		instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
+		//単位行列を書き込んでいく
+		for (uint32_t index = 0; index < kNumInstance; ++index) {
+			instancingData[index].WVP = MakeIdentity4x4();
+			instancingData[index].World = MakeIdentity4x4();
+		}
+
 
 
 		//シリアライズしてバイナリする
@@ -983,18 +1003,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//マテリアル用のリソースを作る。今回はcolor１つ分のサイズを用意する
 		ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
 
-		//Transform作成
-		const uint32_t kNumInstance = 10;	//インスタンス数
-		//Instancing用のTransformationnMatrixリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(TransformationMatrix) * kNumInstance);
-		//書き込むためのアドレスを取得
-		TransformationMatrix* instancingData = nullptr;
-		instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
-		//単位行列を書き込んでいく
-		for (uint32_t index = 0; index < kNumInstance; ++index) {
-			instancingData[index].WVP = MakeIdentity4x4();
-			instancingData[index].World = MakeIdentity4x4();
-		}
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
 		instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
