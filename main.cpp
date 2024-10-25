@@ -1084,6 +1084,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				//入力の更新
 				input->Update();
+				if (input->PushKey(DIK_0)){
+					OutputDebugStringA("Hit 0\n");
+				}
+				//if (input->PushKey(DIK_UP) || input->PushKey(DIK_DOWN) || input->PushKey(DIK_LEFT) || input->PushKey(DIK_RIGHT)) {
+				//	if (input->PushKey(DIK_UP)) {
+				//		cameraTransform.translate.y -= 0.1f;
+				//	} else if (input->PushKey(DIK_DOWN)) {
+				//		cameraTransform.translate.y += 0.1f;
+				//	} else if (input->PushKey(DIK_RIGHT)) {
+				//		cameraTransform.translate.x -= 0.1f;
+				//	} else if (input->PushKey(DIK_LEFT)) {
+				//		cameraTransform.translate.x += 0.1f;
+				//	}
+				//}
+				//if (input->PushKey(DIK_W) || input->PushKey(DIK_S) || input->PushKey(DIK_D) || input->PushKey(DIK_A)) {
+				//	if (input->PushKey(DIK_W)) {
+				//		transform.rotate.y += 0.1f;
+				//	} else if (input->PushKey(DIK_S)) {
+				//		transform.rotate.y -= 0.1f;
+				//	} else if (input->PushKey(DIK_D)) {
+				//		transform.rotate.x += 0.1f;
+				//	} else if (input->PushKey(DIK_A)) {
+				//		transform.rotate.x -= 0.1f;
+				//	}
+				//}
 
 				ImGui_ImplDX12_NewFrame();
 				ImGui_ImplWin32_NewFrame();
