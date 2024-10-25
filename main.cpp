@@ -1084,7 +1084,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				//入力の更新
 				input->Update();
-				if (input->PushKey(DIK_0)){
+				if (input->ReleseKey(DIK_0)){
 					OutputDebugStringA("Hit 0\n");
 				}
 				//if (input->PushKey(DIK_UP) || input->PushKey(DIK_DOWN) || input->PushKey(DIK_LEFT) || input->PushKey(DIK_RIGHT)) {
