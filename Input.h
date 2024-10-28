@@ -5,7 +5,6 @@
 #include<dinput.h>
 
 
-using namespace Microsoft::WRL;
 /// 入力
 class Input {
 public:
