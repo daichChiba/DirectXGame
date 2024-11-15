@@ -10,6 +10,7 @@
 #include<fstream>
 #include<sstream>
 #include <wrl.h>
+#include<random>
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
@@ -462,6 +463,14 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
+}
+
+Particle MakeNewParticle(std::mt19937& randomEngine) {
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	Particle particle;
+	particle.transform.scale = { 1.0f,1.0f,1.0f };
+	particle.transform.rotate = { 0.0f,0.0f,0.0f };
+	particle.transform.translate={ distribution(randomEngine)}
 }
 
 //windowsアプリでのエントリーポイント(main関数)
@@ -1158,13 +1167,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
-		Transform transforms[kNumInstance];
+		Particle particles[kNumInstance];
+		std::random_device seedGenerator;
+		std::mt19937 randomEngine(seedGenerator());
+		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 		for (uint32_t index = 0; index < kNumInstance; ++index) {
-			transforms[index].scale = { 1.0f,1.0f,1.0f };
-			transforms[index].rotate = { 0.0f,0.0f,0.0f };
-			transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
-		}
+			particles[index].transform.scale = { 1.0f,1.0f,1.0f };
+			particles[index].transform.rotate = { 0.0f,0.0f,0.0f };
+			particles[index].transform.translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+			particles[index].velocity = { 0.0f,1.0f,0.0f };
+			//位置と速度を[-1,1でランダムに初期化]
+			particles[index].transform.translate = { distribution(randomEngine),distribution(randomEngine),0.0f };
+			particles[index].velocity = { distribution(randomEngine),distribution(randomEngine),0.0f };
 
+		}
+		//Δtを定義。とりあえず60fps固定してあるが、実時間を計測して可変fpsで動かせるようにしておくとなおよい
+		const float kDeltaTime = 1.0f / 60.0f;
 
 		//Textureを読んで転送する
 		DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
@@ -1194,7 +1212,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// SRVの生成
 		device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
-
+		bool useUpdate = false;
 		MSG msg{};
 		//ウィンドウのxボタンが押されるまでループ
 		while (msg.message != WM_QUIT) {
@@ -1222,6 +1240,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("modelRotato", &transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
 				ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
+				ImGui::Checkbox("Update", &useUpdate);
 				ImGui::End();
 
 				//transform.rotate.y += 0.03f;
@@ -1244,10 +1263,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				Matrix4x4 viewProjectionMatrix = Multply(viewMatrix, projectionMatrix);
 				for (uint32_t index = 0; index < kNumInstance; index++) {
-					Matrix4x4 worldMatrixs = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+					Matrix4x4 worldMatrixs =
+						MakeAffineMatrix(
+							particles[index].transform.scale,
+							particles[index].transform.rotate,
+							particles[index].transform.translate);
 					Matrix4x4 worldViewProjectionMatrixs = Multply(worldMatrixs, viewProjectionMatrix);
 					instancingData[index].WVP = worldViewProjectionMatrixs;
 					instancingData[index].World = worldMatrixs;
+					if (useUpdate==true){
+						particles[index].transform.translate += particles[index].velocity * kDeltaTime;
+					}
 				}
 
 				//コマンドを積み込んで確定させる
