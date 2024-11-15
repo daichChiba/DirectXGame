@@ -1212,7 +1212,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// SRVの生成
 		device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
-		bool useUpdate = false;
+		//particlの切り替え
+		bool isParticle = false;
 		MSG msg{};
 		//ウィンドウのxボタンが押されるまでループ
 		while (msg.message != WM_QUIT) {
@@ -1240,7 +1241,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("modelRotato", &transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
 				ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
-				ImGui::Checkbox("Update", &useUpdate);
+				ImGui::Checkbox("isParticle", &isParticle);
 				ImGui::End();
 
 				//transform.rotate.y += 0.03f;
@@ -1271,7 +1272,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					Matrix4x4 worldViewProjectionMatrixs = Multply(worldMatrixs, viewProjectionMatrix);
 					instancingData[index].WVP = worldViewProjectionMatrixs;
 					instancingData[index].World = worldMatrixs;
-					if (useUpdate==true){
+					if (isParticle ==true){
 						particles[index].transform.translate += particles[index].velocity * kDeltaTime;
 					}
 				}
