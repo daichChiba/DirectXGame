@@ -1250,8 +1250,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//入力開放
 		delete input;
 
-		delete winCounter;
-		
 
 
 		//ImGuiの終了処理。詳細はさして重要ではないので解説は省略する。
@@ -1270,6 +1268,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//windowsAPIの終了処理
 		winCounter->Finalize();
 
+		//WindowsAPI開放処理
+		delete winCounter;
 
 		////リソースリークチェック
 		//IDXGIDebug1* debug;
