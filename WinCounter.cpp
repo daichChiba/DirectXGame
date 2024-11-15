@@ -21,6 +21,12 @@ LRESULT CALLBACK WinCounter::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 
 }
 
+void WinCounter::Finalize(){
+	CloseWindow(hwnd);
+	//COMの終了処理
+	CoUninitialize();
+}
+
 void WinCounter::Initialize(){
 	//COMの初期化
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);

@@ -529,7 +529,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//入力の初期化
 	input = new Input();
-	input->Initialize(winCounter->GetHInstance(), winCounter->GetHwnd());
+	input->Initialize(winCounter);
 
 
 	//段階的に分けてエラーと警告を表示し、停止する。
@@ -1266,10 +1266,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//#ifdef _DEBUG
 		//		debugController->Release();
 		//#endif // _DEBUG
-		CloseWindow(winCounter->GetHwnd());
-		//COMの終了処理
-		CoUninitialize();
 
+		//windowsAPIの終了処理
+		winCounter->Finalize();
 
 
 		////リソースリークチェック

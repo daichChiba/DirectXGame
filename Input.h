@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include<wrl.h>
 #include<dinput.h>
-
+#include"WinCounter.h"
 
 using namespace Microsoft::WRL;
 /// 入力
@@ -16,7 +16,7 @@ public:
 	/// </summary>
 	/// インスタンスハンドル
 	/// ウィンドウハンドル
-	void Initialize(HINSTANCE hInstance, HWND hwnd);
+	void Initialize(WinCounter* winCounter);
 
 	/// <summary>
 	/// 更新
@@ -57,5 +57,8 @@ private:
 
 	//前回の全キーの入力状態を取得する
 	BYTE preKey[256] = {};
+
+	//WindowsAPI
+	WinCounter* winCounter_ = nullptr;
 };
 
