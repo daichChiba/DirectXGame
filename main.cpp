@@ -10,16 +10,15 @@
 #include<fstream>
 #include<sstream>
 #include<wrl.h>
-#include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
 #include"externals/DirectXTex/DirectXTex.h"
 #include"input.h"
+#include"WinCounter.h"
 
 
 #include"Matrix.h"
 #include"Transform.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
 #pragma comment(lib,"d3d12.lib")
@@ -53,29 +52,7 @@ struct ModelData {
 	MaterialData material;
 };
 
-//ウィンドウプロシージャ
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
-
-
-
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-		return true;
-	}
-
-	//メッセージに応じてゲーム固有の処理を行う
-	switch (msg) {
-		//ウィンドウが破棄された
-	case WM_DESTROY:
-		//OSに対して、アプリ終了を伝える
-		PostQuitMessage(0);
-		return 0;
-	}
-
-	//　標準のメッセージ処理を行う
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-
-}
 std::wstring ConvertString(const std::string& str) {
 	if (str.empty()) {
 		return std::wstring();
@@ -455,8 +432,10 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 //windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChacker leakCheck;
-
-
+	//ポインタ
+	WinCounter* winCounter = nullptr;
+	winCounter = new WinCounter();
+	winCounter->Initialize();
 
 
 
@@ -490,8 +469,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	//ウィンドウを表示する
-	ShowWindow(hwnd, SW_SHOW);
 	//ここから下に05の資料を書いていく
 
 	//DXGIファクトリーの作成
@@ -1273,6 +1250,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//入力開放
 		delete input;
 
+		delete winCounter;
 		
 
 

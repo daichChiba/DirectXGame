@@ -3,6 +3,11 @@
 #include<cstdint>
 #include<string>
 #include<format>
+#include"externals/imgui/imgui.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+
 // WindowsAPI
 class WinCounter{
 public://メンバ関数
@@ -10,23 +15,12 @@ public://メンバ関数
 	void Initialize();
 	//更新
 	void Update();
-
-private:
 	WNDCLASS wc{};
+	HWND hwnd;
 
-	// ウィンドウの生成
-	HWND hwnd = CreateWindow(
-		wc.lpszClassName,		//利用するクラス名
-		L"CG2",					//タイトルバーの文字
-		WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル
-		CW_USEDEFAULT,			//表示X座標（windowsに任せる）
-		CW_USEDEFAULT,			//表示Y座標（windowsOSに任せる）
-		wrc.right - wrc.left,	//ウィンドウ横幅
-		wrc.bottom - wrc.top,	//ウィンドウ縦幅
-		nullptr,				//縦ウィンドウハンドル
-		nullptr,				//メニューハンドル
-		wc.hInstance,			//インスタンスハンドル
-		nullptr					//オプション
-	);
+	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+private:
+
+
 };
 
