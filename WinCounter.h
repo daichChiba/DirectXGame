@@ -15,11 +15,19 @@ public://メンバ関数
 	void Initialize();
 	//更新
 	void Update();
-	WNDCLASS wc{};
-	HWND hwnd;
-
+	
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+
+	//クライアント領域のサイズ
+	static const int32_t kClientWidth = 1280;
+	static const int32_t kClientHeight = 720;
+
+	//Getter
+	HWND GetHwnd()const { return hwnd; }
+	HINSTANCE GetHInstance()const { return wc.hInstance; }
 private:
+	HWND hwnd = nullptr;
+	WNDCLASS wc{};
 
 
 };

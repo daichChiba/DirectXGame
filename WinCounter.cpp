@@ -23,7 +23,7 @@ LRESULT CALLBACK WinCounter::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 
 void WinCounter::Initialize(){
 	//COMの初期化
-	CoInitializeEx(0, COINIT_MULTITHREADED);
+	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
 	////出力ウィンドウへの文字出力
 	//OutputDebugStringA("Hello,DirectX!");
@@ -41,8 +41,7 @@ void WinCounter::Initialize(){
 	//ウィンドウクラスを登録する
 	RegisterClass(&wc);
 
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
+
 	RECT wrc = { 0,0,kClientWidth,kClientHeight };
 	//クライアント領域を元に実際のサイズにwrcを変更してもらう
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
