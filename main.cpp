@@ -582,6 +582,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(device != nullptr);
 	Log("Complete create D3D12Device!!!\n");//初期化完了ログを出す
 
+
+
 	//ポインタ
 	Input* input = nullptr;
 
