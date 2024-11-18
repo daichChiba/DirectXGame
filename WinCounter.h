@@ -13,8 +13,8 @@ class WinCounter{
 public://メンバ関数
 	//初期化
 	void Initialize();
-	//更新
-	void Update();
+	//メッセージの処理
+	bool ProcessMessge();
 	
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 

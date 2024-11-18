@@ -70,6 +70,18 @@ void WinCounter::Initialize(){
 
 }
 
-void WinCounter::Update(){
+bool WinCounter::ProcessMessge(){
+	MSG msg{};
+	//windowにメッセージが来てたら最優先で処理させる
+	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 
+	if (msg.message == WM_QUIT){
+		return true;
+	}
+	return false;
 }
+
+
