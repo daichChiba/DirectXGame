@@ -5,6 +5,7 @@
 #include<dinput.h>
 #include"WinApp.h"
 
+
 using namespace Microsoft::WRL;
 /// 入力
 class Input {
