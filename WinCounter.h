@@ -16,8 +16,10 @@ public://メンバ関数
 	//メッセージの処理
 	bool ProcessMessge();
 	
+	//ウィンドウプロシージャ
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
+	//終了処理
 	void Finalize();
 
 	//クライアント領域のサイズ
