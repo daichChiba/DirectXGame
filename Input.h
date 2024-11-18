@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include<wrl.h>
 #include<dinput.h>
-#include"WinCounter.h"
+#include"WinApp.h"
 
 using namespace Microsoft::WRL;
 /// 入力
@@ -16,7 +16,7 @@ public:
 	/// </summary>
 	/// インスタンスハンドル
 	/// ウィンドウハンドル
-	void Initialize(WinCounter* winCounter);
+	void Initialize(WinApp* winCounter);
 
 	/// <summary>
 	/// 更新
@@ -59,6 +59,6 @@ private:
 	BYTE preKey[256] = {};
 
 	//WindowsAPI
-	WinCounter* winCounter_ = nullptr;
+	WinApp* winCounter_ = nullptr;
 };
 

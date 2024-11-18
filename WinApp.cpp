@@ -1,7 +1,7 @@
-#include "WinCounter.h"
+#include "WinApp.h"
 
 //ウィンドウプロシージャ
-LRESULT CALLBACK WinCounter::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT CALLBACK WinApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
@@ -21,13 +21,13 @@ LRESULT CALLBACK WinCounter::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 
 }
 
-void WinCounter::Finalize(){
+void WinApp::Finalize(){
 	CloseWindow(hwnd);
 	//COMの終了処理
 	CoUninitialize();
 }
 
-void WinCounter::Initialize(){
+void WinApp::Initialize(){
 	//COMの初期化
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
@@ -70,7 +70,7 @@ void WinCounter::Initialize(){
 
 }
 
-bool WinCounter::ProcessMessge(){
+bool WinApp::ProcessMessge(){
 	MSG msg{};
 	//windowにメッセージが来てたら最優先で処理させる
 	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {

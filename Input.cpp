@@ -4,7 +4,7 @@
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
 
-void Input::Initialize(WinCounter* winCounter){
+void Input::Initialize(WinApp* winCounter){
 	this->winCounter_ = winCounter;
 	HRESULT result;
 	result = DirectInput8Create(winCounter_->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);

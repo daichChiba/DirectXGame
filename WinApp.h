@@ -9,7 +9,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 
 
 // WindowsAPI
-class WinCounter{
+class WinApp{
 public://メンバ関数
 	//初期化
 	void Initialize();
