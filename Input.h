@@ -5,7 +5,6 @@
 #include<dinput.h>
 #include"WinApp.h"
 
-
 using namespace Microsoft::WRL;
 /// 入力
 class Input {
@@ -17,7 +16,7 @@ public:
 	/// </summary>
 	/// インスタンスハンドル
 	/// ウィンドウハンドル
-	void Initialize(WinApp* winCounter);
+	void Initialize(WinApp* winApp);
 
 	/// <summary>
 	/// 更新
@@ -60,6 +59,6 @@ private:
 	BYTE preKey[256] = {};
 
 	//WindowsAPI
-	WinApp* winCounter_ = nullptr;
+	WinApp* winApp_ = nullptr;
 };
 
