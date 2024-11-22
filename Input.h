@@ -14,8 +14,7 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	/// インスタンスハンドル
-	/// ウィンドウハンドル
+	/// <param name="winApp">windowsAPIの変数</param>
 	void Initialize(WinApp* winApp);
 
 	/// <summary>
