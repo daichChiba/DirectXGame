@@ -10,7 +10,19 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
+	/// <param name="winApp">WinAPI</param>
 	void Initialize(WinApp* winApp);
+
+	/// <summary>
+	/// ディスクリプタヒープを生成する
+	/// </summary>
+	/// <param name="device"></param>
+	/// <param name="heapType"></param>
+	/// <param name="numDescriptors"></param>
+	/// <param name="shaderVisible"></param>
+	/// <returns></returns>
+	static Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
+		ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 
 private:
@@ -32,7 +44,13 @@ private:
 	/// <summary>
 	/// 深度バッファ初期化
 	/// </summary>
+	void CreateDepthStencilTextureResource();
+
+	/// <summary>
+	/// 各種ディスクリプタヒープの初期化
+	/// </summary>
 	void AllDescriptorHeapInitialize();
+	
 	/// <summary>
 	/// デバイスの初期化
 	/// </summary>
@@ -84,4 +102,15 @@ private:
 
 	//WindowsAPI
 	WinApp* winApp_ = nullptr;
+
+	//Resourceの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+
+	//RTV用のヒープ
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap ;
+	//SRV用のヒープ
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap ;
+	//DSV用のヒープ
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap ;
+
 };
