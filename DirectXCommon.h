@@ -2,6 +2,8 @@
 #include<d3d12.h>
 #include<dxgi1_6.h>
 #include<wrl.h>
+#include<array>
+#include<dxcapi.h>
 class WinApp;
 
 //DirectX基盤
@@ -14,16 +16,18 @@ public:
 	void Initialize(WinApp* winApp);
 
 	/// <summary>
-	/// ディスクリプタヒープを生成する
+	/// SRVの指定番号のCPUデスクリプタハンドルを取得する
 	/// </summary>
-	/// <param name="device"></param>
-	/// <param name="heapType"></param>
-	/// <param name="numDescriptors"></param>
-	/// <param name="shaderVisible"></param>
+	/// <param name="index"></param>
 	/// <returns></returns>
-	static Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
-		ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
 
+	/// <summary>
+	/// SRVの指定番号のGPUデスクリプタハンドルを取得する
+	/// </summary>
+	/// <param name="index"></param>
+	/// <returns></returns>
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
 private:
 
@@ -37,7 +41,7 @@ private:
 	/// </summary>
 	void CommandRelevanceInitialize();
 	/// <summary>
-	/// スワップチェーンの初期化
+	/// スワップチェーンの生成
 	/// </summary>
 	void SwapChainInitialize();
 
@@ -47,38 +51,69 @@ private:
 	void CreateDepthStencilTextureResource();
 
 	/// <summary>
-	/// 各種ディスクリプタヒープの初期化
+	/// 各種ディスクリプタヒープの生成
 	/// </summary>
 	void AllDescriptorHeapInitialize();
-	
+
 	/// <summary>
-	/// デバイスの初期化
+	/// レンダーターゲットビューの初期化
 	/// </summary>
 	void RTVInitialize();
+
 	/// <summary>
-	/// デバイスの初期化
+	/// 深度ステンシルビューの初期化
 	/// </summary>
 	void DepthStencilInitialize();
 	/// <summary>
-	/// デバイスの初期化
+	/// フェンスの初期化
 	/// </summary>
 	void FenceInitialize();
 	/// <summary>
-	/// デバイスの初期化
+	/// ビューポート矩形の初期化
 	/// </summary>
 	void ViewportInitialize();
 	/// <summary>
-	/// デバイスの初期化
+	/// シザリング矩形の生成
 	/// </summary>
 	void ScissorRectInitialize();
 	/// <summary>
-	/// デバイスの初期化
+	/// DCXコンパイラの生成
 	/// </summary>
 	void DxcCompilerInitialize();
 	/// <summary>
-	/// デバイスの初期化
+	/// ImGuiの初期化
 	/// </summary>
 	void ImGuiInitialize();
+
+
+	/// <summary>
+	/// ディスクリプタヒープを生成する
+	/// </summary>
+	/// <param name="device">デバイス</param>
+	/// <param name="heapType">ヒープの種類</param>
+	/// <param name="numDescriptors"></param>
+	/// <param name="shaderVisible"></param>
+	/// <returns></returns>
+	static Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
+		ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+
+	/// <summary>
+	/// 指定番号のCPUデスクリプタハンドルを取得する
+	/// </summary>
+	/// <param name="descriptorHeap"></param>
+	/// <param name="descriptorSize"></param>
+	/// <param name="index"></param>
+	/// <returns></returns>
+	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
+	/// <summary>
+	/// 指定番号のGPUデスクリプタハンドルを取得する
+	/// </summary>
+	/// <param name="descriptorHeap"></param>
+	/// <param name="descriptorSize"></param>
+	/// <param name="index"></param>
+	/// <returns></returns>
+	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
 
 private:
@@ -97,6 +132,8 @@ private:
 	//コマンドキューを生成する
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
 
+	// スワップチェーン
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	// スワップチェーンを作成する
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
 
@@ -104,13 +141,40 @@ private:
 	WinApp* winApp_ = nullptr;
 
 	//Resourceの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
+
+	uint32_t descriptorSizeSRV;
+	uint32_t descriptorSizeRTV;
+	uint32_t descriptorSizeDSV;
 
 	//RTV用のヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap ;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
 	//SRV用のヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap ;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
 	//DSV用のヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap ;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
+
+
+	//RTVの設定
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+
+	//RTVを２つ作るのでディスクリプタを２つ用意
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+	//スワップチェーンリソース
+	std::array< Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
+	//Fenceを作る
+	//初期値0でFenceを作る
+	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
+	//ビューポート
+	D3D12_VIEWPORT viewport{};
+	//シザー矩形
+	D3D12_RECT scissorRect{};
+	//DXCユーティリティ
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
+	//DXCコンパイラ
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
+	//デフォルトインクルードハンドラ
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
+
 
 };
