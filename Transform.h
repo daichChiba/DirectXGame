@@ -9,10 +9,18 @@ struct Transform{
 struct TransformationMatrix {
 	Matrix4x4 WVP;
 	Matrix4x4 World;
+	Vector4 color;
+};
+
+struct ParticleForGPU {
+	Matrix4x4 WVP;
+	Matrix4x4 World;
+	Vector4 color;
 };
 
 struct Particle{
 	Transform transform;
 	Vector3 velocity;
 	float currentTime;
+	Vector4 color;
 };
