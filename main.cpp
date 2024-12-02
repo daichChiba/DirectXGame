@@ -17,10 +17,15 @@
 #include"Matrix.h"
 #include"Transform.h"
 
+#include"Logger.h"
+#include"StringUtility.h"
+
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxcompiler.lib")
+
+
 
 struct D3DResourceLeakChacker {
 	~D3DResourceLeakChacker() {
@@ -71,7 +76,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 	IDxcIncludeHandler* includeHandler) {
 	// ここの中身をこの後書いていく
 	// 1.hlslファイルを読み込む
-	Log(ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
+	Logger::Log(StringUtility::ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
 	// hlslファイルを読む
 	IDxcBlobEncoding* shaderSource = nullptr;
 	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
@@ -109,7 +114,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 	IDxcBlobUtf8* shaderError = nullptr;
 	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
 	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
-		Log(shaderError->GetStringPointer());
+		Logger::Log(shaderError->GetStringPointer());
 		//警告・エラーダメゼッタイ
 		assert(false);
 	}
@@ -121,7 +126,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
 	assert(SUCCEEDED(hr));
 	//成功したログを出す
-	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+	Logger::Log(StringUtility::ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
 	//　もう使わないリソースを開放
 	shaderSource->Release();
 	shaderResult->Release();
@@ -177,7 +182,7 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 DirectX::ScratchImage LoadTexture(const std::string& filePath) {
 	//テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
-	std::wstring filePathW = ConvertString(filePath);
+	std::wstring filePathW = StringUtility::ConvertString(filePath);
 	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
 	assert(SUCCEEDED(hr));
 
@@ -534,7 +539,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
 	if (FAILED(hr)) {
-		Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+		Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
 		assert(false);
 	}
 	//バイナリを元に生成
@@ -570,16 +575,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//三角形の中を塗りつぶす
 	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
-	//Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Resources/shaders/Object3D.VS.hlsl",
-		L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get()
-	);
-	assert(vertexShaderBlob != nullptr);
+	////Shaderをコンパイルする
+	//Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Resources/shaders/Object3D.VS.hlsl",
+	//	L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get()
+	//);
+	//assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Resources/shaders/Object3D.PS.hlsl",
-		L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get()
-	);
-	assert(pixelShaderBlob != nullptr);
+	//Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Resources/shaders/Object3D.PS.hlsl",
+	//	L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get()
+	//);
+	//assert(pixelShaderBlob != nullptr);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
 	graphicsPipelineStateDesc.pRootSignature = rootSignaturre.Get();//RootSignature
@@ -785,7 +790,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	//先頭はImGuiを使っているのでその次を使う
 	textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -883,30 +888,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Render();
 
 
+		//描画前処理
+		dxCommon->PreDraw();
 
 
-		//描画先のRTVを設定する。
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-		commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);//2.end
-
-		//指定した色で画面全体をクリアする
-		float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
-		commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);//3.end
-
-		//描画用のDescriptorHeapの設定
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap };
-		commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
 
 
-		//　コマンドを積む(三角形の描画)
-		commandList->RSSetViewports(1, &viewport);//Viewportを設定
-		commandList->RSSetScissorRects(1, &scissorRect);//Scirssorを設定
 		//　RootSignatureを設定。PSOに設定しているけど別途設定が必要
 		commandList->SetGraphicsRootSignature(rootSignaturre.Get());
 		commandList->SetPipelineState(graphicsPipelineState.Get());//PSOを設定
 		commandList->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
-		//　形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		//マテリアルCBufferの場所を設定
 		commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 		//wvp用のCBufferの場所を設定
@@ -914,8 +905,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 		commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
-		//指定した深度で画面全体をクリアする
-		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 		////　描画！！(DrawCall/ドローコール)。３頂点で１つのインスタンス。インスタンスについては今度
 		commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
@@ -938,58 +927,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
 
-		// 画面に書く処理はすべて終わり、画面に映すので、状態を遷移
-		// 今回はRenderTargetからPresentにする
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-		//TransitionBarrierを張る
-		commandList->ResourceBarrier(1, &barrier);
-
-		//コマンドリストの内容を確定させる。すべてのコマンドを積んでからcloseすること
-		hr = commandList->Close();
-		assert(SUCCEEDED(hr));//4.end
+		dxCommon->PostDraw();
 
 
-		//コマンドをキックする
-		// 1.CommandListが完成したので、CommandQueueを使ってGPUにキックする
-		// 2.実行が終わったら、画面が完成したので画面の交換をしてもらう
-		//	a.これは、SwapChain作成時に指定したCommandQueueを介して行われる
-		//	b.画面交換用のExecuteCommandListを行っていると考えると良い
-		// 3.画面の交換をしたら次のフレームの準備をする
-		//	a.実際に保存する場所を管理しているAllocatorとCommandListの両方をResetする
 
-		//GPUにコマンドリストの実行を行わせる
-		ID3D12CommandList* commandLists[] = { commandList.Get() };
-		commandQueue->ExecuteCommandLists(1, commandLists);//1.end
 
-		//GPUとOSに画面の交換を行うよう通知する
-		swapChain->Present(1, 0);//2.end
 
-		//Signalを送る
-		// 1.実行が完了したタイミングでFenceに指定した値を書き込んでもらう
-		// 2.CPUではFenceに指定した値が書き込まれているかを確認する
-		// 3.指定した値が書き込まれていないのであれば、書き込まれるまで待つ
 
-		//Fenceの値を更新
-		fenceValue++;
 
-		//GPUがここまでたどり着いたときに、Fenceの値を指定した値に代入するようにSignalを送る
-		commandQueue->Signal(fence.Get(), fenceValue);
 
-		//Fenceの値が指定したSignal値にたどり着いているか確認する
-		//GetCompletedValueの初期値はFence作成時に渡した初期値
-		if (fence->GetCompletedValue() < fenceValue) {
-			//指定したSignalにたどり着いていないので、たどり着くまで待つようにイベントを設定する
-			fence->SetEventOnCompletion(fenceValue, fenceEvent);
-			//イベントを待つ
-			WaitForSingleObject(fenceEvent, INFINITE);
-		}
-
-		//次のフレーム用のコマンドリストを準備
-		hr = commandAllocator->Reset();
-		assert(SUCCEEDED(hr));
-		hr = commandList->Reset(commandAllocator.Get(), nullptr);
-		assert(SUCCEEDED(hr));//3.end
 
 	}
 

@@ -1,7 +1,6 @@
 #include "StringUtility.h"
 #include<Windows.h>
 #include<dxgidebug.h>
-#include<string>
 std::wstring StringUtility::ConvertString(const std::string& str){
 	if (str.empty()) {
 		return std::wstring();

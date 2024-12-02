@@ -47,35 +47,33 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	assert(winApp);
 
 	this->winApp_ = winApp;
-	DeviceInitialize();
-	CommandRelevanceInitialize();
-	SwapChainInitialize();
-	AllDescriptorHeapInitialize();
+	CreateDevice();
+	CreateCommandRelevance();
+	CreateSwapChain();
+	CreateAllDescriptorHeap();
 	RTVInitialize();
 	DepthStencilInitialize();
-	FenceInitialize();
+	CreateFence();
 	ViewportInitialize();
-	ScissorRectInitialize();
-	DxcCompilerInitialize();
+	CreateScissorRect();
+	CreateDxcCompiler();
 	ImGuiInitialize();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index){
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) {
 	return GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, index);
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index){
+D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) {
 	return GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, index);
 }
 
-void DirectXCommon::PreDraw(){
-	//これから書き込むバックバッファのインデックスを取得
-	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();//1.end
+void DirectXCommon::PreDraw() {
+
 
 	/***TransitionBarrierを張る***/
 
-	// TransitionBarrierの設定
-	D3D12_RESOURCE_BARRIER barrier{};
+
 	// 今回のバリアはTransition
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	// Noneにしておく。
@@ -86,15 +84,90 @@ void DirectXCommon::PreDraw(){
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	// 遷移後のResourceState
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	// TransitionBarrierを張る
+	//// TransitionBarrierを張る
+	//commandList->ResourceBarrier(1, &barrier);
+
+	//描画先のRTVを設定する。
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);//2.end
+	//描画用のDescriptorHeapの設定
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap };
+	commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
+
+	//指定した色で画面全体をクリアする
+	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
+	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);//3.end
+	//指定した深度で画面全体をクリアする
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	//SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	//　コマンドを積む(三角形の描画)
+	commandList->RSSetViewports(1, &viewport);//Viewportを設定
+	commandList->RSSetScissorRects(1, &scissorRect);//Scirssorを設定
+
+	//　形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+}
+
+void DirectXCommon::PostDraw() {
+
+	// 画面に書く処理はすべて終わり、画面に映すので、状態を遷移
+	// 今回はRenderTargetからPresentにする
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	//TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
+
+	//コマンドリストの内容を確定させる。すべてのコマンドを積んでからcloseすること
+	hr = commandList->Close();
+	assert(SUCCEEDED(hr));//4.end
+
+	//コマンドをキックする
+// 1.CommandListが完成したので、CommandQueueを使ってGPUにキックする
+// 2.実行が終わったら、画面が完成したので画面の交換をしてもらう
+//	a.これは、SwapChain作成時に指定したCommandQueueを介して行われる
+//	b.画面交換用のExecuteCommandListを行っていると考えると良い
+// 3.画面の交換をしたら次のフレームの準備をする
+//	a.実際に保存する場所を管理しているAllocatorとCommandListの両方をResetする
+
+//GPUにコマンドリストの実行を行わせる
+	ID3D12CommandList* commandLists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(1, commandLists);//1.end
+
+	//GPUとOSに画面の交換を行うよう通知する
+	swapChain->Present(1, 0);//2.end
+
+	//Signalを送る
+	// 1.実行が完了したタイミングでFenceに指定した値を書き込んでもらう
+	// 2.CPUではFenceに指定した値が書き込まれているかを確認する
+	// 3.指定した値が書き込まれていないのであれば、書き込まれるまで待つ
+
+	//Fenceの値を更新
+	fenceValue++;
+
+	//GPUがここまでたどり着いたときに、Fenceの値を指定した値に代入するようにSignalを送る
+	commandQueue->Signal(fence.Get(), fenceValue);
+
+	//Fenceの値が指定したSignal値にたどり着いているか確認する
+	//GetCompletedValueの初期値はFence作成時に渡した初期値
+	if (fence->GetCompletedValue() < fenceValue) {
+		//指定したSignalにたどり着いていないので、たどり着くまで待つようにイベントを設定する
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		//イベントを待つ
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+
+	//次のフレーム用のコマンドリストを準備
+	hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));//3.end
 }
 
-void DirectXCommon::PostDraw(){
-}
 
-
-void DirectXCommon::DeviceInitialize() {
+void DirectXCommon::CreateDevice() {
 
 	hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
 	//初期化の根本的な問題でエラーが出た場合はプログラムが間違っているか、どうにもできない場合が多いのでassertにしておく
@@ -142,7 +215,7 @@ void DirectXCommon::DeviceInitialize() {
 
 }
 
-void DirectXCommon::CommandRelevanceInitialize() {
+void DirectXCommon::CreateCommandRelevance() {
 	//コマンドアロケータ
 	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	//コマンドアロケータの生成がうまくいかなかったので起動できない
@@ -162,7 +235,7 @@ void DirectXCommon::CommandRelevanceInitialize() {
 
 }
 
-void DirectXCommon::SwapChainInitialize() {
+void DirectXCommon::CreateSwapChain() {
 
 	swapChainDesc.Width = WinApp::kClientWidth;		//画面の幅。ウィンドウのクライアント領域を同じものにしておく。
 	swapChainDesc.Height = WinApp::kClientHeight;	//画面の高さ。ウィンドウのクライアント領域を同じものにしておく。
@@ -177,7 +250,7 @@ void DirectXCommon::SwapChainInitialize() {
 
 }
 
-void DirectXCommon::CreateDepthStencilTextureResource(){
+void DirectXCommon::CreateDepthStencilTextureResource() {
 	// 生成するResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = winApp_->kClientWidth;						//Textureの幅
@@ -212,18 +285,18 @@ void DirectXCommon::CreateDepthStencilTextureResource(){
 
 }
 
-void DirectXCommon::AllDescriptorHeapInitialize() {
+void DirectXCommon::CreateAllDescriptorHeap() {
 	//DiscriptorSizeを取得しておく
 	descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	//RTV用のヒープでディスクリプタの数は2．RTVはShader内で触るものではないため、ShaderVisibleはfalse
-	 rtvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+	rtvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 	//SRV用のヒープでディスクリプタの数は128。SRVはshader内で触るものなので、shaderVisibleはtrue
-	 srvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
 	//DSV用のヒープでディスクリプタの数は1。DSVはShader内で触るものではないので、ShaderVisibleはfalse
-	 dsvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+	dsvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
 }
 
@@ -268,12 +341,11 @@ void DirectXCommon::DepthStencilInitialize() {
 
 }
 
-void DirectXCommon::FenceInitialize() {
-	uint64_t fenceValue = 0;
+void DirectXCommon::CreateFence() {
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
 	//FenceのSignalを待つためのイベントを作成する
-	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(fenceEvent != nullptr);
 
 }
@@ -289,7 +361,7 @@ void DirectXCommon::ViewportInitialize() {
 
 }
 
-void DirectXCommon::ScissorRectInitialize() {
+void DirectXCommon::CreateScissorRect() {
 	//基本的にビューポートと同じく系で構成されるようにする
 	scissorRect.left = 0;
 	scissorRect.right = WinApp::kClientWidth;
@@ -298,7 +370,7 @@ void DirectXCommon::ScissorRectInitialize() {
 
 }
 
-void DirectXCommon::DxcCompilerInitialize() {
+void DirectXCommon::CreateDxcCompiler() {
 	// dxcCompilerを初期化DXCコンパイラ
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
 	assert(SUCCEEDED(hr));

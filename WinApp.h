@@ -22,13 +22,14 @@ public://メンバ関数
 	//終了処理
 	void Finalize();
 
-	//クライアント領域のサイズ
-	static const int32_t kClientWidth = 1280;
-	static const int32_t kClientHeight = 720;
 
 	//Getter
 	HWND GetHwnd()const { return hwnd; }
 	HINSTANCE GetHInstance()const { return wc.hInstance; }
+public:
+	//クライアント領域のサイズ
+	static const int32_t kClientWidth = 1280;
+	static const int32_t kClientHeight = 720;
 private:
 	HWND hwnd = nullptr;
 	WNDCLASS wc{};

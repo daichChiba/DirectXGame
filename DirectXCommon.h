@@ -45,15 +45,15 @@ private:
 	/// <summary>
 	/// デバイスの初期化
 	/// </summary>
-	void DeviceInitialize();
+	void CreateDevice();
 	/// <summary>
 	/// コマンド関連の初期化
 	/// </summary>
-	void CommandRelevanceInitialize();
+	void CreateCommandRelevance();
 	/// <summary>
 	/// スワップチェーンの生成
 	/// </summary>
-	void SwapChainInitialize();
+	void CreateSwapChain();
 
 	/// <summary>
 	/// 深度バッファ初期化
@@ -63,7 +63,7 @@ private:
 	/// <summary>
 	/// 各種ディスクリプタヒープの生成
 	/// </summary>
-	void AllDescriptorHeapInitialize();
+	void CreateAllDescriptorHeap();
 
 	/// <summary>
 	/// レンダーターゲットビューの初期化
@@ -77,7 +77,7 @@ private:
 	/// <summary>
 	/// フェンスの初期化
 	/// </summary>
-	void FenceInitialize();
+	void CreateFence();
 	/// <summary>
 	/// ビューポート矩形の初期化
 	/// </summary>
@@ -85,11 +85,11 @@ private:
 	/// <summary>
 	/// シザリング矩形の生成
 	/// </summary>
-	void ScissorRectInitialize();
+	void CreateScissorRect();
 	/// <summary>
 	/// DCXコンパイラの生成
 	/// </summary>
-	void DxcCompilerInitialize();
+	void CreateDxcCompiler();
 	/// <summary>
 	/// ImGuiの初期化
 	/// </summary>
@@ -110,7 +110,7 @@ private:
 	/// <summary>
 	/// 指定番号のCPUデスクリプタハンドルを取得する
 	/// </summary>
-	/// <param name="descriptorHeap"></param>
+	/// <param name="descriptorHeap">ディスクリプタヒープ</param>
 	/// <param name="descriptorSize"></param>
 	/// <param name="index"></param>
 	/// <returns></returns>
@@ -135,6 +135,7 @@ private:
 
 	//デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device>device;
+
 	//コマンドアロケータを生成する
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
 	//コマンドリストを生成する
@@ -185,6 +186,13 @@ private:
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	//デフォルトインクルードハンドラ
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-
+	// TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
+	//これから書き込むバックバッファのインデックスを取得
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();//1.end
+	//フェンス値
+	uint64_t fenceValue = 0;
+	//フェンスイベント
+	HANDLE fenceEvent;
 
 };
