@@ -125,14 +125,14 @@ void DirectXCommon::PostDraw() {
 	assert(SUCCEEDED(hr));//4.end
 
 	//コマンドをキックする
-// 1.CommandListが完成したので、CommandQueueを使ってGPUにキックする
-// 2.実行が終わったら、画面が完成したので画面の交換をしてもらう
-//	a.これは、SwapChain作成時に指定したCommandQueueを介して行われる
-//	b.画面交換用のExecuteCommandListを行っていると考えると良い
-// 3.画面の交換をしたら次のフレームの準備をする
-//	a.実際に保存する場所を管理しているAllocatorとCommandListの両方をResetする
+	// 1.CommandListが完成したので、CommandQueueを使ってGPUにキックする
+	// 2.実行が終わったら、画面が完成したので画面の交換をしてもらう
+	//	a.これは、SwapChain作成時に指定したCommandQueueを介して行われる
+	//	b.画面交換用のExecuteCommandListを行っていると考えると良い
+	// 3.画面の交換をしたら次のフレームの準備をする
+	//	a.実際に保存する場所を管理しているAllocatorとCommandListの両方をResetする
 
-//GPUにコマンドリストの実行を行わせる
+	//GPUにコマンドリストの実行を行わせる
 	ID3D12CommandList* commandLists[] = { commandList.Get() };
 	commandQueue->ExecuteCommandLists(1, commandLists);//1.end
 
@@ -332,6 +332,19 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
 
 
 void DirectXCommon::CreateDevice() {
+
+#ifdef _DEBUG
+	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;//1.end
+
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {//2.end
+		//デバックレイヤーを有効化する。
+		debugController->EnableDebugLayer();//3.end
+
+		//さらにGPU側でもチェックを行うようにする
+		debugController->SetEnableSynchronizedCommandQueueValidation(TRUE);//4.end
+	}
+#endif // DEBUG
+
 
 	hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
 	//初期化の根本的な問題でエラーが出た場合はプログラムが間違っているか、どうにもできない場合が多いのでassertにしておく

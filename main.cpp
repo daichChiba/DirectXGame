@@ -216,17 +216,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 3.デバックレイヤーを有効化する
 	// 4.GPU側でもチェックを行うようにする
 
-#ifdef _DEBUG
-	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;//1.end
-
-	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {//2.end
-		//デバックレイヤーを有効化する。
-		debugController->EnableDebugLayer();//3.end
-
-		//さらにGPU側でもチェックを行うようにする
-		debugController->SetEnableSynchronizedCommandQueueValidation(TRUE);//4.end
-	}
-#endif // DEBUG
 
 
 
