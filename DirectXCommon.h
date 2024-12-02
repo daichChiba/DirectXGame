@@ -39,6 +39,7 @@ public:
 	/// </summary>
 	void PostDraw();
 
+
 private:
 
 
@@ -125,6 +126,9 @@ private:
 	/// <returns></returns>
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
+	//Getter
+	ID3D12Device* GetDevice()const { return device.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList()const { return commandList.Get(); }
 
 private:
 
