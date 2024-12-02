@@ -2,8 +2,11 @@
 #include<d3d12.h>
 #include<dxgi1_6.h>
 #include<wrl.h>
+#include<string>
 #include<array>
 #include<dxcapi.h>
+
+#include"externals/DirectXTex/DirectXTex.h"
 class WinApp;
 
 //DirectX基盤
@@ -39,6 +42,48 @@ public:
 	/// </summary>
 	void PostDraw();
 
+	/// <summary>
+	/// シェイダーのコンパイル
+	/// </summary>
+	/// <param name="filePath">CompilerするShaderファイルへのパス</param>
+	/// <param name="profile">Compilerに使用するProfile</param>
+	/// <returns></returns>
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath,const wchar_t* profile);
+
+	/// <summary>
+	/// バッファリソースの生成
+	/// </summary>
+	/// <param name="sizeInDytes">データサイズ</param>
+	/// <returns></returns>
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInDytes);
+
+	/// <summary>
+	/// テクスチャリソース
+	/// </summary>
+	/// <param name="device">デバイス</param>
+	/// <param name="metadata"></param>
+	/// <returns></returns>
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource( const DirectX::TexMetadata& metadata);
+	/// <summary>
+	/// テクスチャデータの転送
+	/// </summary>
+	/// <param name="texture">テクスチャ</param>
+	/// <param name="mipImages"></param>
+	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
+	/// <summary>
+	/// テクスチャファイルの読み込み
+	/// </summary>
+	/// <param name="filePath">テクスチャファイルのパス</param>
+	/// <returns>画像イメージデータ</returns>
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
+	//Getter
+	ID3D12Device* GetDevice() const { return device.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+	ID3D12DescriptorHeap* GetSrvDescriptorHeap() const { return srvDescriptorHeap.Get(); }
+	ID3D12DescriptorHeap* GetRtvDescriptorHeap() const { return rtvDescriptorHeap.Get(); }
+	HANDLE GetFenceEvent() const { return fenceEvent; }
 
 private:
 
@@ -126,9 +171,6 @@ private:
 	/// <returns></returns>
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
-	//Getter
-	ID3D12Device* GetDevice()const { return device.Get(); }
-	ID3D12GraphicsCommandList* GetCommandList()const { return commandList.Get(); }
 
 private:
 
@@ -193,7 +235,7 @@ private:
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
 	//これから書き込むバックバッファのインデックスを取得
-	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();//1.end
+	UINT backBufferIndex = 0;//1.end
 	//フェンス値
 	uint64_t fenceValue = 0;
 	//フェンスイベント
