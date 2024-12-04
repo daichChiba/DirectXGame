@@ -555,6 +555,7 @@ void DirectXCommon::ViewportInitialize() {
 
 }
 
+
 void DirectXCommon::CreateScissorRect() {
 	//基本的にビューポートと同じく系で構成されるようにする
 	scissorRect.left = 0;
