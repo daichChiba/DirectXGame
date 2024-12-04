@@ -71,7 +71,11 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t in
 void DirectXCommon::PreDraw() {
 
 
+	//これから書き込むバックバッファのインデックスを取得
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();//1.end
 	/***TransitionBarrierを張る***/
+	// TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
 
 
 	// 今回のバリアはTransition
@@ -84,8 +88,8 @@ void DirectXCommon::PreDraw() {
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	// 遷移後のResourceState
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	//// TransitionBarrierを張る
-	//commandList->ResourceBarrier(1, &barrier);
+	// TransitionBarrierを張る
+	commandList->ResourceBarrier(1, &barrier);
 
 	//描画先のRTVを設定する。
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -112,6 +116,9 @@ void DirectXCommon::PreDraw() {
 }
 
 void DirectXCommon::PostDraw() {
+	//これから書き込むバックバッファのインデックスを取得
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();//1.end
+	D3D12_RESOURCE_BARRIER barrier{};
 
 	// 画面に書く処理はすべて終わり、画面に映すので、状態を遷移
 	// 今回はRenderTargetからPresentにする
@@ -450,7 +457,7 @@ void DirectXCommon::CreateDepthStencilTextureResource() {
 
 	//depthStencilResourceの生成
 	depthStencilResource = nullptr;
-	HRESULT hr = device->CreateCommittedResource(
+	 hr = device->CreateCommittedResource(
 		&heapProperties,					//Heapの設定
 		D3D12_HEAP_FLAG_NONE,				//Heapの特殊な設定。特になし。
 		&resourceDesc,						//Resourceの設定
@@ -514,7 +521,7 @@ void DirectXCommon::DepthStencilInitialize() {
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;// 2dTexture
 	//DSVHeapの先頭にDSVを作る
-	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, GetCPUDescriptorHandle(dsvDescriptorHeap.Get(),descriptorSizeDSV,0));
 
 }
 

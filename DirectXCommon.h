@@ -232,10 +232,6 @@ private:
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	//デフォルトインクルードハンドラ
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-	// TransitionBarrierの設定
-	D3D12_RESOURCE_BARRIER barrier{};
-	//これから書き込むバックバッファのインデックスを取得
-	UINT backBufferIndex = 0;//1.end
 	//フェンス値
 	uint64_t fenceValue = 0;
 	//フェンスイベント
