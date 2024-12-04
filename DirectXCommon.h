@@ -79,8 +79,8 @@ public:
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 	//Getter
-	ID3D12Device* GetDevice() const { return device.Get(); }
-	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+	ID3D12Device* GetDevice() const { return device_.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 	ID3D12DescriptorHeap* GetSrvDescriptorHeap() const { return srvDescriptorHeap.Get(); }
 	ID3D12DescriptorHeap* GetRtvDescriptorHeap() const { return rtvDescriptorHeap.Get(); }
 	HANDLE GetFenceEvent() const { return fenceEvent; }
@@ -177,15 +177,15 @@ private:
 	//HRESULTはWindows系のエラーコードであり、
 	//関数が成功したかどうかをSUCCEEDEDマクロで判断できる
 	HRESULT hr;
-	Microsoft::WRL::ComPtr<IDXGIFactory7>dxgiFactory;
+	Microsoft::WRL::ComPtr<IDXGIFactory7>dxgiFactory_;
 
 	//デバイス
-	Microsoft::WRL::ComPtr<ID3D12Device>device;
+	Microsoft::WRL::ComPtr<ID3D12Device>device_;
 
 	//コマンドアロケータを生成する
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_ = nullptr;
 	//コマンドリストを生成する
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
 	//コマンドキューを生成する
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
 
@@ -198,7 +198,7 @@ private:
 	WinApp* winApp_ = nullptr;
 
 	//Resourceの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
 
 	uint32_t descriptorSizeSRV;
 	uint32_t descriptorSizeRTV;
@@ -236,5 +236,8 @@ private:
 	uint64_t fenceValue = 0;
 	//フェンスイベント
 	HANDLE fenceEvent;
+	//バリア
+	D3D12_RESOURCE_BARRIER barrier{};
+
 
 };
