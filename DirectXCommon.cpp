@@ -524,6 +524,7 @@ void DirectXCommon::RTVInitialize() {
 
 }
 
+
 void DirectXCommon::DepthStencilInitialize() {
 	CreateDepthStencilTextureResource();
 	// DSVの設定

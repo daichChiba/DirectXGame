@@ -196,6 +196,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 }
 
 
+
 //windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChacker leakCheck;
