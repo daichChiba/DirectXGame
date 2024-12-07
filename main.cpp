@@ -467,10 +467,14 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 
 Particle MakeNewParticle(std::mt19937& randomEngine) {
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 	Particle particle;
 	particle.transform.scale = { 1.0f,1.0f,1.0f };
 	particle.transform.rotate = { 0.0f,0.0f,0.0f };
-	particle.transform.translate={ distribution(randomEngine)}
+	particle.transform.translate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+	particle.velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
+	//particle.color = { distColor(randomEngine),distColor(randomEngine) ,distColor(randomEngine) };
+	return particle;
 }
 
 //windowsアプリでのエントリーポイント(main関数)

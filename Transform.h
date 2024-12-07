@@ -11,8 +11,9 @@ struct TransformationMatrix {
 	Matrix4x4 World;
 };
 
-struct Particle{
+struct Particle {
 	Transform transform;
 	Vector3 velocity;
 	float currentTime;
+	//Vector4 color;
 };
