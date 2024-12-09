@@ -10,9 +10,12 @@
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
 #include"externals/DirectXTex/DirectXTex.h"
+
+///自作関数
 #include"input.h"
 #include"WinApp.h"
 #include"DirectXCommon.h"
+#include"D3DResourceLeakChecker.h"
 
 #include"Matrix.h"
 #include"Transform.h"
@@ -27,17 +30,7 @@
 
 
 
-struct D3DResourceLeakChacker {
-	~D3DResourceLeakChacker() {
-		//リソースリークチェック
-		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-			debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-			debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-			debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		}
-	}
-};
+
 
 struct VertexData {
 	Vector4 position;
@@ -199,7 +192,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 
 //windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	D3DResourceLeakChacker leakCheck;
+	D3DResourceLeakChecker leakCheck;
 	//ポインタ
 	WinApp* winApp = nullptr;
 	winApp = new WinApp();
@@ -266,7 +259,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 
 		//開放
-		infoQueue->Release();
+		//infoQueue->Release();
 
 		// エラーと警告の抑制（windowsの不具合によるエラー表示などを無視するための設定をする）
 		// 1.抑制するメッセージのIDを出す

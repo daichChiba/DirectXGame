@@ -85,7 +85,7 @@ public:
 	ID3D12DescriptorHeap* GetRtvDescriptorHeap() const { return rtvDescriptorHeap.Get(); }
 	HANDLE GetFenceEvent() const { return fenceEvent; }
 
-private:
+private://メンバ関数
 
 
 	/// <summary>
