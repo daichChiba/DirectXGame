@@ -5,6 +5,8 @@
 #include<string>
 #include<array>
 #include<dxcapi.h>
+#include<chrono>
+#include<thread>
 
 #include"externals/DirectXTex/DirectXTex.h"
 class WinApp;
@@ -171,7 +173,16 @@ private://メンバ関数
 	/// <returns></returns>
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
-	
+	/// <summary>
+	/// FPS固定初期化
+	/// </summary>
+	void InitializeFixFPS();
+	/// <summary>
+	/// FPS固定更新
+	/// </summary>
+	void UpdateFixFPS();
+
+	std::chrono::steady_clock::time_point reference_;
 
 private:
 
@@ -240,5 +251,6 @@ private:
 	//バリア
 	D3D12_RESOURCE_BARRIER barrier{};
 
+	
 
 };

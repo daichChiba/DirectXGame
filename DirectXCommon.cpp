@@ -39,12 +39,48 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(ID3D12Descript
 	return handleGPU;
 }
 
+void DirectXCommon::InitializeFixFPS(){
+	//現在時間を記録する
+	reference_ = std::chrono::steady_clock::now();
+}
+
+void DirectXCommon::UpdateFixFPS(){
+	//1/60秒ピッタリの時間
+	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+	//1/60秒よりわずかに短い時間
+	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+	//現在時間を取得する
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	//前回記録からの経過時間を取得する
+	std::chrono::microseconds elapsed =
+		std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+
+
+	//ここでダブルバッファの活用をやっておくとより良いものになる
+
+	//1/60(よりわずかに短い時間)経っていない場合
+	if (elapsed < kMinCheckTime) {
+		//1/60秒経過するまで微小なスリープを繰り返す
+		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
+			//1マイクロ秒スリープ
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+	}
+	// 現在の時間を記録する
+	reference_ = std::chrono::steady_clock::now();
+}
+
 
 
 
 void DirectXCommon::Initialize(WinApp* winApp) {
 	//NULL検出
 	assert(winApp);
+
+	//FPS固定初期化
+	InitializeFixFPS();
 
 	this->winApp_ = winApp;
 	CreateDevice();
@@ -129,6 +165,9 @@ void DirectXCommon::PostDraw() {
 	//コマンドリストの内容を確定させる。すべてのコマンドを積んでからcloseすること
 	hr = commandList_->Close();
 	assert(SUCCEEDED(hr));//4.end
+
+	//FPS固定
+	UpdateFixFPS();
 
 	//コマンドをキックする
 	// 1.CommandListが完成したので、CommandQueueを使ってGPUにキックする
@@ -510,17 +549,24 @@ void DirectXCommon::RTVInitialize() {
 	//ディスクリプタの先頭を取得する
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
+	for (uint32_t i = 0; i < 2; ++i){
+		rtvHandles[0] = rtvStartHandle;
+		rtvHandles[1].ptr = rtvHandles[0].ptr + device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-	//まず１つ目を作る。一つ目は最初の所に作る。作る場所をこちらで指定してあげる必要がある。
-	rtvHandles[0] = rtvStartHandle;
-	device_->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
+		device_->CreateRenderTargetView(swapChainResources[i].Get(), &rtvDesc, rtvHandles[i]);
 
-	//２つ目のディスクリプタハンドルを得る(自力で)
-	//ポインタの位置をずらすみたいに大きくする。
-	rtvHandles[1].ptr = rtvHandles[0].ptr + device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	}
 
-	//２つ目を作る
-	device_->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
+	////まず１つ目を作る。一つ目は最初の所に作る。作る場所をこちらで指定してあげる必要がある。
+	//rtvHandles[0] = rtvStartHandle;
+	//device_->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
+
+	////２つ目のディスクリプタハンドルを得る(自力で)
+	////ポインタの位置をずらすみたいに大きくする。
+	//rtvHandles[1].ptr = rtvHandles[0].ptr + device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	////２つ目を作る
+	//device_->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 
 }
 
