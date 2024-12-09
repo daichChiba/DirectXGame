@@ -264,13 +264,14 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 [[nodiscard]]
 ID3D12Resource* UploadTexturData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages,
 	ID3D12Device* device,ID3D12GraphicsCommandList* commandList) {
-	//Meta情報を取得
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	////Meta情報を取得
+	//const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	//Subresourceの作成
 	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
 	DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
 	uint64_t intermediateSize=GetRequiredIntermediateSize(texture,0,UINT(subresources.size()));
 	ID3D12Resource* intermediateResource = CreateBufferResource(device, intermediateSize);
+	UpdateSubresources(commandList, texture, intermediateResource, 0, 0, UINT(subresources.size()), subresources.data());
 	// Tetureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READへResourceStateを変更する
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
