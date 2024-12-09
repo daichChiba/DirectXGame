@@ -627,7 +627,7 @@ void DirectXCommon::CreateDxcCompiler() {
 
 void DirectXCommon::ImGuiInitialize() {
 	//　ImGuiの初期化。詳細はさして重要ではないため解説は省略する。
-//　こうゆうもんである
+	//　こうゆうもんである
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
