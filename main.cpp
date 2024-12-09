@@ -16,6 +16,8 @@
 #include"WinApp.h"
 #include"DirectXCommon.h"
 #include"D3DResourceLeakChecker.h"
+#include"SpriteCommon.h"
+#include"Sprite.h"
 
 #include"Matrix.h"
 #include"Transform.h"
@@ -296,15 +298,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	//01_00の20ページから始まる4/18
 
 
 
 
+#pragma region 基盤システムの初期化
 
 
+	SpriteCommon* spriteCommon_ = nullptr;
+	//スプライト共通部の初期化	
+	spriteCommon_ = new SpriteCommon();
+	spriteCommon_->Initialize();
 
-	//02_00_29ページの内容
+#pragma endregion　基盤システムの初期化
+
+#pragma region 基盤システムの初期化
+
+	Sprite* sprite_ = new Sprite();
+	sprite_->Initialize();
+
+#pragma endregion　基盤システムの初期化
+
 
 	// RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
@@ -449,6 +463,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = dxCommon->CreateBufferResource( sizeof(VertexData) * modelData.vertices.size());
 
+
+
+
+
+
+
+
+
 	//Sprite用の頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = dxCommon->CreateBufferResource( sizeof(VertexData) * 6);
 
@@ -562,6 +584,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
 	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };//右下
 	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
+
+
 
 
 	////インデックスリソースにデータを書き込む
@@ -771,6 +795,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//#ifdef _DEBUG
 	//		debugController->Release();
 	//#endif // _DEBUG
+
+	delete sprite_;
+
+	delete spriteCommon_;
 
 
 	delete dxCommon;
