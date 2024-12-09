@@ -48,19 +48,6 @@ struct ModelData {
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
 	//ディスクリプタヒープの生成
