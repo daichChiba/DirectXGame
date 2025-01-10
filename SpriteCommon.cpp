@@ -9,6 +9,10 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon){
 	CreateGraphicsPipeline();
 }
 
+void SpriteCommon::SetDrawCommon(){
+
+}
+
 void SpriteCommon::CreateRootSignature(){
 	descriptionRootSignature.Flags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
