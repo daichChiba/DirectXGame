@@ -262,7 +262,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-
 #pragma region 基盤システムの初期化
 
 
