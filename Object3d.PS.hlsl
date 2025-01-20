@@ -2,6 +2,7 @@
 
 struct Material{
     float32_t4 color;
+    int32_t enableLIghting;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);
