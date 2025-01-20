@@ -9,8 +9,8 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon){
 	CreateGraphicsPipeline();
 }
 
-void SpriteCommon::SetDrawCommon(){
-
+void SpriteCommon::PreDraw(){
+	
 }
 
 void SpriteCommon::CreateRootSignature(){

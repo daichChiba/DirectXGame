@@ -11,7 +11,7 @@ public://メンバ関数
 public://メンバ変数
 	DirectXCommon* GetDxCommon()const { return dxCommon_; }
 
-	void SetDrawCommon();
+	void PreDraw();
 
 private://メンバ初期化関数
 	/// <summary>
