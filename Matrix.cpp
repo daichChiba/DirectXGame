@@ -1,5 +1,5 @@
 #include "Matrix.h"
-
+#include<cassert>
 
 Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 ret;
@@ -358,4 +358,16 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	ret.z = ((v1.x * v2.y) - (v1.y * v2.x));
 
 	return ret;
+}
+
+float Length(const Vector3& v) {
+	float result;
+	result = float(sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	return result;
+}
+
+Vector3 Normalize(const Vector3& v) {
+	float length = Length(v);
+	assert(length != 0.0f);
+	return { v.x / length, v.y / length, v.z / length };
 }
