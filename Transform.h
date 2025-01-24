@@ -21,3 +21,7 @@ struct DirectionalLight {
 	Vector3 direction;///!<ライトの向き
 	float intensity;///!<輝度
 };
+
+struct CameraForGPU {
+	Vector3 worldPosition;
+};

@@ -641,7 +641,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 		//RootParameter作成。複数設定できるので配列。今回は結果１つだけなので長さ１の配列
-		D3D12_ROOT_PARAMETER rootParameters[4] = {};
+		D3D12_ROOT_PARAMETER rootParameters[5] = {};
 		rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 		rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 		rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
@@ -659,6 +659,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//VertexShaderで使う
 		rootParameters[3].Descriptor.ShaderRegister = 1;//レジスタ番号２を使う
 
+		rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+		rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//VertexShaderで使う
+		rootParameters[4].Descriptor.ShaderRegister = 2;//レジスタ番号２を使う
 
 		descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
 		descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
@@ -791,7 +794,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
 		//ライト用のリソースを作る
 		ID3D12Resource* directionalLightResource = CreateBufferResource(device, sizeof(DirectionalLight));
-
+		//カメラ用のリソースを作る
+		ID3D12Resource* cameraResource = CreateBufferResource(device, sizeof(CameraForGPU));
 
 
 		//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
@@ -819,6 +823,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Material* materialDataSprite = nullptr;
 		Matrix4x4* transformationMatrixData = nullptr;
 		DirectionalLight* directionalLightData = nullptr;
+		CameraForGPU* cameraData = nullptr;
 
 
 		//書き込むためのアドレスを取得
@@ -826,6 +831,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
 		wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 		directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+		cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
 
 		//今回は赤を書き込んでみる
 		materialData->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -838,6 +844,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 		directionalLightData->direction = { 0.0f,-1.0f,0.0f };
 		directionalLightData->intensity = 1.0f;
+
+		cameraData->worldPosition = {0.0f,0.0f,-1.0f};
 
 
 		// 頂点バッファビューを作成する
@@ -1081,6 +1089,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//ImGui::ColorEdit3("color", &materialDataSprite->color.x);
 				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 				ImGui::DragFloat3("light", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
+				ImGui::DragFloat3("comera", &cameraData->worldPosition.x, 0.01f, -10.0f, 10.0f);
 				ImGui::End();
 
 				transform.rotate.y += 0.03f;
@@ -1099,6 +1108,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				//方向は正規化
 				directionalLightData->direction = Normalize(directionalLightData->direction);
+
+
 
 				//Sprite用のworldViewProjectionMatrixを作る
 				Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
@@ -1169,6 +1180,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall?textureSrvHandleGPU2:textureSrvHandleGPU);
 				//DirectionalLightのCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+				//cameraのCBufferの場所を設定
+				commandList->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 
 				//指定した深度で画面全体をクリアする
 				commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
@@ -1274,6 +1287,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		pixelShaderBlob->Release();
 		vertexShaderBlob->Release();
 		materialResource->Release();
+		cameraResource->Release();
 
 #ifdef _DEBUG
 		debugController->Release();
