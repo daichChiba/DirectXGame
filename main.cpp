@@ -836,6 +836,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//今回は赤を書き込んでみる
 		materialData->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 		materialData->enableLighting = true;
+		materialData->shininess = 70;
 		//今回は白で設定する
 		materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 		materialDataSprite->enableLighting = true;
@@ -1085,8 +1086,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//ImGui::ShowDemoWindow();
 				ImGui::Begin("Window");
 				//変える変数の名前,変えるデータ,変える速度
-				ImGui::ColorEdit3("color", &materialData->color.x);
-				//ImGui::ColorEdit3("color", &materialDataSprite->color.x);
+				//ImGui::ColorEdit3("color", &materialData->color.x);
+				ImGui::ColorEdit3("color", &materialDataSprite->color.x);
 				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 				ImGui::DragFloat3("light", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
 				ImGui::DragFloat3("comera", &cameraData->worldPosition.x, 0.01f, -10.0f, 10.0f);
