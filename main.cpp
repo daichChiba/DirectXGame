@@ -836,7 +836,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//今回は赤を書き込んでみる
 		materialData->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 		materialData->enableLighting = true;
-		materialData->shininess = 70;
+		materialData->shininess = 0.0f;
 		//今回は白で設定する
 		materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 		materialDataSprite->enableLighting = true;
@@ -846,7 +846,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		directionalLightData->direction = { 0.0f,-1.0f,0.0f };
 		directionalLightData->intensity = 1.0f;
 
-		cameraData->worldPosition = {0.0f,0.0f,-1.0f};
+		cameraData->worldPosition = {0.0f,0.0f,-5.0f};
 
 
 		// 頂点バッファビューを作成する
@@ -1107,6 +1107,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				wvpData->WVP = worldViewProjectionMatrix;
 				wvpData->World = worldMatrix;
 
+				cameraData->worldPosition = cameraTransform.translate;
 				//方向は正規化
 				directionalLightData->direction = Normalize(directionalLightData->direction);
 
@@ -1172,8 +1173,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//　形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
 				commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				//マテリアルCBufferの場所を設定
-				//commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				//commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 				//wvp用のCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 				// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
