@@ -1087,7 +1087,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::Begin("Window");
 				//変える変数の名前,変えるデータ,変える速度
 				//ImGui::ColorEdit3("color", &materialData->color.x);
-				ImGui::ColorEdit3("color", &materialDataSprite->color.x);
+				ImGui::ColorEdit3("color", &materialData->color.x);
 				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 				ImGui::DragFloat3("light", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f);
 				ImGui::DragFloat3("comera", &cameraData->worldPosition.x, 0.01f, -10.0f, 10.0f);
@@ -1172,8 +1172,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//　形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
 				commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				//マテリアルCBufferの場所を設定
-				//commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				//commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 				//wvp用のCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 				// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
