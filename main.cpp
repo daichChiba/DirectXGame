@@ -846,7 +846,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		directionalLightData->direction = { 0.0f,-1.0f,0.0f };
 		directionalLightData->intensity = 1.0f;
 
-		cameraData->worldPosition = {0.0f,0.0f,-1.0f};
+		cameraData->worldPosition = {0.0f,4.0f,-10.0f};
 
 
 		// 頂点バッファビューを作成する
