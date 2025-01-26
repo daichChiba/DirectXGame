@@ -560,7 +560,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
-		
+
 
 		//01_00の20ページから始まる4/18
 
@@ -834,7 +834,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
 
 		//今回は赤を書き込んでみる
-		materialData->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+		materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 		materialData->enableLighting = true;
 		materialData->shininess = 70;
 		//今回は白で設定する
@@ -846,7 +846,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		directionalLightData->direction = { 0.0f,-1.0f,0.0f };
 		directionalLightData->intensity = 1.0f;
 
-		cameraData->worldPosition = {0.0f,4.0f,-10.0f};
+		cameraData->worldPosition = { 0.0f,4.0f,-10.0f };
 
 
 		// 頂点バッファビューを作成する
@@ -926,7 +926,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				vertexData[start + 4] = vertexData[start + 1];
 
 				//d
-				vertexData[start + 5].position.x = cos(lat + kLatEvery) * cos(lon+kLonEvery);
+				vertexData[start + 5].position.x = cos(lat + kLatEvery) * cos(lon + kLonEvery);
 				vertexData[start + 5].position.y = sin(lat + kLatEvery);
 				vertexData[start + 5].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
 				vertexData[start + 5].position.w = 1.0f;
@@ -1178,7 +1178,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 				// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-				commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall?textureSrvHandleGPU2:textureSrvHandleGPU);
+				commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 				//DirectionalLightのCBufferの場所を設定
 				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 				//cameraのCBufferの場所を設定
@@ -1312,6 +1312,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 
-	}
+}
 	return 0;
 }
