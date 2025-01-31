@@ -1,5 +1,6 @@
 #pragma once
 #include<d3d12.h>
+#include<wrl.h>
 class DirectXCommon;
 class SpriteCommon {
 public://メンバ関数
@@ -21,7 +22,7 @@ private://メンバ初期化関数
 	/// <summary>
 	/// グラフィックスパイプラインの生成
 	/// </summary>
-	void CreateGraphicsPipeline();
+	void CreateGraphicsPipelineState();
 
 private://メンバ生成関数
 
@@ -33,6 +34,8 @@ private:
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
 	//DirectXCommon
 	DirectXCommon* dxCommon_;
+	//ルートシグネチャ
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 
 };
 

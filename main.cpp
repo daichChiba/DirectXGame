@@ -268,16 +268,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	SpriteCommon* spriteCommon_ = nullptr;
 	//スプライト共通部の初期化	
 	spriteCommon_ = new SpriteCommon();
-	spriteCommon_->Initialize();
+	spriteCommon_->Initialize(dxCommon);
 
-#pragma endregion　基盤システムの初期化
+#pragma endregion
 
 #pragma region 基盤システムの初期化
 
 	Sprite* sprite_ = new Sprite();
 	sprite_->Initialize();
 
-#pragma endregion　基盤システムの初期化
+#pragma endregion
 
 
 	// RootSignature作成
