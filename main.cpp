@@ -798,6 +798,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ID3D12Resource* cameraResource = CreateBufferResource(device, sizeof(CameraForGPU));
 
 
+
+
 		//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
 		ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
 		//データを読み込む
