@@ -374,6 +374,11 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
 
 }
 
+void DirectXCommon::Finalize(){
+	//開放処理
+	CloseHandle(fenceEvent);
+}
+
 
 void DirectXCommon::CreateDevice() {
 
