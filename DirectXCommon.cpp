@@ -146,8 +146,7 @@ void DirectXCommon::PreDraw() {
 	commandList_->RSSetViewports(1, &viewport);//Viewportを設定
 	commandList_->RSSetScissorRects(1, &scissorRect);//Scirssorを設定
 
-	//　形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 
 }
 

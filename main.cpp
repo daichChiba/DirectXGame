@@ -688,7 +688,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//描画前処理
 		dxCommon->PreDraw();
 
-
+		spriteCommon_->PreDraw();
 
 
 		//　RootSignatureを設定。PSOに設定しているけど別途設定が必要
