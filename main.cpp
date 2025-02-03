@@ -19,11 +19,13 @@
 #include"SpriteCommon.h"
 #include"Sprite.h"
 
-#include"Matrix.h"
+#include"MathUtility.h"
 #include"Transform.h"
 
 #include"Logger.h"
 #include"StringUtility.h"
+
+
 
 
 #pragma comment(lib,"d3d12.lib")
@@ -31,14 +33,11 @@
 #pragma comment(lib,"dxcompiler.lib")
 
 
+using namespace MathUtility;
 
 
 
-struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
+
 
 struct MaterialData {
 	std::string textureFilePath;
@@ -431,10 +430,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	//Sprite用の頂点リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = dxCommon->CreateBufferResource( sizeof(VertexData) * 6);
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexResourceSprite = dxCommon->CreateBufferResource( sizeof(uint32_t) * 6);
 
 	//マテリアル用のリソースを作る。今回はcolor１つ分のサイズを用意する
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = dxCommon->CreateBufferResource( sizeof(Vector4));
@@ -525,25 +521,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
 	//vertexData[5].texcoord = { 1.0f,1.0f };
 
-	//頂点リソースのにデータを書き込む(Sprite)
-	VertexData* vertexDataSprite = nullptr;
-	//書き込むためのアドレスを取得(Sprite)
-	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+	////頂点リソースのにデータを書き込む(Sprite)
+	//VertexData* vertexDataSprite = nullptr;
+	////書き込むためのアドレスを取得(Sprite)
+	//vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
 
-	//1枚目の三角形
-	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };//左下
-	vertexDataSprite[0].texcoord = { 0.0f,1.0f };
-	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//左上
-	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
-	vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };//右下
-	vertexDataSprite[2].texcoord = { 1.0f,1.0f };
-	//2枚目の三角形
-	vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };//左上
-	vertexDataSprite[3].texcoord = { 0.0f,0.0f };
-	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };//右上
-	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
-	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };//右下
-	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
+	////1枚目の三角形
+	//vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };//左下
+	//vertexDataSprite[0].texcoord = { 0.0f,1.0f };
+	//vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//左上
+	//vertexDataSprite[1].texcoord = { 0.0f,0.0f };
+	//vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };//右下
+	//vertexDataSprite[2].texcoord = { 1.0f,1.0f };
+	////2枚目の三角形
+	//vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };//左上
+	//vertexDataSprite[3].texcoord = { 0.0f,0.0f };
+	//vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };//右上
+	//vertexDataSprite[4].texcoord = { 1.0f,0.0f };
+	//vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };//右下
+	//vertexDataSprite[5].texcoord = { 1.0f,1.0f };
 
 
 
@@ -707,12 +703,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 
-		//Spriteの描画
-		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-		//TransformationMatrixCBufferの場所を設定
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-		////描画!(DrawCall/ドローコール)
-		dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+		////Spriteの描画
+		//dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+		////TransformationMatrixCBufferの場所を設定
+		//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+		//////描画!(DrawCall/ドローコール)
+		//dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 
 		////頂点インデックスの描画
 		//commandList->IASetIndexBuffer(&indexBufferViewSprite);
