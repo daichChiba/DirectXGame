@@ -747,7 +747,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//開放処理
-	CloseHandle(dxCommon->GetFenceEvent());
+	dxCommon->Finalize();
 	//#ifdef _DEBUG
 	//		debugController->Release();
 	//#endif // _DEBUG
