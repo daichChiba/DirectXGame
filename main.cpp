@@ -707,12 +707,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 
-		//Spriteの描画
-		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-		//TransformationMatrixCBufferの場所を設定
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-		////描画!(DrawCall/ドローコール)
-		dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+		////Spriteの描画
+		//dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+		////TransformationMatrixCBufferの場所を設定
+		//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+		//////描画!(DrawCall/ドローコール)
+		//dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 
 		////頂点インデックスの描画
 		//commandList->IASetIndexBuffer(&indexBufferViewSprite);
