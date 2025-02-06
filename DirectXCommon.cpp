@@ -146,8 +146,7 @@ void DirectXCommon::PreDraw() {
 	commandList_->RSSetViewports(1, &viewport);//Viewportを設定
 	commandList_->RSSetScissorRects(1, &scissorRect);//Scirssorを設定
 
-	//　形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 
 }
 
@@ -375,6 +374,11 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
 
 }
 
+void DirectXCommon::Finalize(){
+	//開放処理
+	CloseHandle(fenceEvent);
+}
+
 
 void DirectXCommon::CreateDevice() {
 
@@ -434,6 +438,47 @@ void DirectXCommon::CreateDevice() {
 	//デバイスの生成がうまくいかなかったので起動できない
 	assert(device_ != nullptr);
 	Logger::Log("Complete create D3D12Device!!!\n");//初期化完了ログを出す
+
+#ifdef _DEBUG
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;//1.end
+	if (SUCCEEDED(device_->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {//2.end
+		//やばいエラーの時に止まる
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+
+		//エラーの時に止まる
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+
+		////警告時に止まる
+		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+
+		//開放
+		//infoQueue->Release();
+
+		// エラーと警告の抑制（windowsの不具合によるエラー表示などを無視するための設定をする）
+		// 1.抑制するメッセージのIDを出す
+		// 2.抑制するレベルを設定する
+		// 3.指定したメッセージの表示を抑制する
+
+		//抑制するメッセージのID
+		D3D12_MESSAGE_ID denyIds[] = {
+			//Windows11でのDXGIデバックレイヤーとDXGIデバックレイヤーの相互作用バグによるエラーメッセージ
+			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
+		};//1.end
+
+		//抑制するレベル
+		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+		D3D12_INFO_QUEUE_FILTER filter{};
+		filter.DenyList.NumIDs = _countof(denyIds);
+		filter.DenyList.pIDList = denyIds;
+		filter.DenyList.NumSeverities = _countof(severities);
+		filter.DenyList.pSeverityList = severities;//2.end
+
+
+		//指定したメッセージの表示を抑制する
+		infoQueue->PushStorageFilter(&filter);
+
+	}
+#endif // _DEBUG
 
 }
 
