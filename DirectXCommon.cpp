@@ -39,12 +39,12 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(ID3D12Descript
 	return handleGPU;
 }
 
-void DirectXCommon::InitializeFixFPS(){
+void DirectXCommon::InitializeFixFPS() {
 	//現在時間を記録する
 	reference_ = std::chrono::steady_clock::now();
 }
 
-void DirectXCommon::UpdateFixFPS(){
+void DirectXCommon::UpdateFixFPS() {
 	//1/60秒ピッタリの時間
 	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
 	//1/60秒よりわずかに短い時間
@@ -210,7 +210,7 @@ void DirectXCommon::PostDraw() {
 	assert(SUCCEEDED(hr));//3.end
 }
 
-Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile){
+Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile) {
 	// ここの中身をこの後書いていく
 	// 1.hlslファイルを読み込む
 	Logger::Log(StringUtility::ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
@@ -272,7 +272,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring
 
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInDytes){
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInDytes) {
 	// 頂点リソース用のヒープの設定
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;//UploadHeapを使う
@@ -301,7 +301,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_
 	return resource;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource( const DirectX::TexMetadata& metadata){
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata) {
 	// 1.matadataを基にResourceの作成
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = UINT(metadata.width);//Textureの幅
@@ -372,6 +372,18 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
 	//ミップマップ付きのデータを返す
 	return mipImages;
 
+}
+
+void DirectXCommon::Finalize(){
+	//ImGuiの終了処理。詳細はさして重要ではないので解説は省略する。
+//こういうもんである。初期化と逆順に行う
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+
+	//開放処理
+	CloseHandle(fenceEvent);
 }
 
 void DirectXCommon::Finalize(){
@@ -546,15 +558,15 @@ void DirectXCommon::CreateDepthStencilTextureResource() {
 
 	//depthStencilResourceの生成
 	depthStencilResource_ = nullptr;//初期化
-	 hr = device_->CreateCommittedResource(
+	hr = device_->CreateCommittedResource(
 		&heapProperties,					//Heapの設定
 		D3D12_HEAP_FLAG_NONE,				//Heapの特殊な設定。特になし。
 		&resourceDesc,						//Resourceの設定
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,	//深度値を書き込む状態にしておく
 		&depthClearValue,					//Clear最適値
-		 /***************受け渡し*******************/
+		/***************受け渡し*******************/
 		IID_PPV_ARGS(&depthStencilResource_)//作成するResourceポインタへのポインタ
-		 /***************受け渡し*******************/
+		/***************受け渡し*******************/
 	);
 	assert(SUCCEEDED(hr));
 	/*******************************生成**************************************/
@@ -593,7 +605,7 @@ void DirectXCommon::RTVInitialize() {
 	//ディスクリプタの先頭を取得する
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	for (uint32_t i = 0; i < 2; ++i){
+	for (uint32_t i = 0; i < 2; ++i) {
 		rtvHandles[0] = rtvStartHandle;
 		rtvHandles[1].ptr = rtvHandles[0].ptr + device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -622,7 +634,7 @@ void DirectXCommon::DepthStencilInitialize() {
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;// 2dTexture
 	//DSVHeapの先頭にDSVを作る
-	device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, GetCPUDescriptorHandle(dsvDescriptorHeap.Get(),descriptorSizeDSV,0));
+	device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, GetCPUDescriptorHandle(dsvDescriptorHeap.Get(), descriptorSizeDSV, 0));
 
 }
 

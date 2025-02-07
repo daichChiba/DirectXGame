@@ -50,7 +50,7 @@ public:
 	/// <param name="filePath">CompilerするShaderファイルへのパス</param>
 	/// <param name="profile">Compilerに使用するProfile</param>
 	/// <returns></returns>
-	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath,const wchar_t* profile);
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
 
 	/// <summary>
 	/// バッファリソースの生成
@@ -65,7 +65,7 @@ public:
 	/// <param name="device">デバイス</param>
 	/// <param name="metadata"></param>
 	/// <returns></returns>
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource( const DirectX::TexMetadata& metadata);
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
 	/// <summary>
 	/// テクスチャデータの転送
 	/// </summary>
@@ -81,6 +81,8 @@ public:
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 	void Finalize();
+
+
 	//Getter
 	ID3D12Device* GetDevice() const { return device_.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
@@ -252,6 +254,6 @@ private:
 	//バリア
 	D3D12_RESOURCE_BARRIER barrier{};
 
-	
+
 
 };
