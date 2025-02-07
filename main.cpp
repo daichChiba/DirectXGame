@@ -740,7 +740,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 
 
-
 	//入力開放
 	delete input;
 
