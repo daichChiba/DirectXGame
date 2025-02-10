@@ -375,9 +375,9 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
 
 }
 
-void DirectXCommon::Finalize(){
+void DirectXCommon::Finalize() {
 	//ImGuiの終了処理。詳細はさして重要ではないので解説は省略する。
-//こういうもんである。初期化と逆順に行う
+	//こういうもんである。初期化と逆順に行う
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
