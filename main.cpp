@@ -23,6 +23,8 @@
 #include"Logger.h"
 #include"StringUtility.h"
 
+#include"Enemy.h"
+
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -340,10 +342,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	//Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"Resources/shaders/Object3D.VS.hlsl",L"vs_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"Resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"Resources/shaders/Object3D.PS.hlsl",L"ps_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"Resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
@@ -394,20 +396,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//頂点リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = dxCommon->CreateBufferResource( sizeof(VertexData) * modelData.vertices.size());
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = dxCommon->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
 
 	//Sprite用の頂点リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = dxCommon->CreateBufferResource( sizeof(VertexData) * 6);
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSprite = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexResourceSprite = dxCommon->CreateBufferResource( sizeof(uint32_t) * 6);
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResourceSprite = dxCommon->CreateBufferResource(sizeof(uint32_t) * 6);
 
 	//マテリアル用のリソースを作る。今回はcolor１つ分のサイズを用意する
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = dxCommon->CreateBufferResource( sizeof(Vector4));
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = dxCommon->CreateBufferResource(sizeof(Vector4));
 
 
 
 	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource( sizeof(Matrix4x4));
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(Matrix4x4));
 	//データを読み込む
 	Matrix4x4* wvpData = nullptr;
 	//書き込むためのアドレスを取得
@@ -416,7 +418,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*wvpData = MakeIdentity4x4();
 
 	//Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = dxCommon->CreateBufferResource( sizeof(Matrix4x4));
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = dxCommon->CreateBufferResource(sizeof(Matrix4x4));
 	//データを読み込む
 	Matrix4x4* transformtionMatrixDataSprite = nullptr;
 	//書き込むためのアドレスを取得
@@ -534,7 +536,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Textureを読んで転送する
 	DirectX::ScratchImage mipImages = DirectXCommon::LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource( metadata);
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(metadata);
 	dxCommon->UploadTextureData(textureResource.Get(), mipImages);
 
 	//DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
@@ -559,17 +561,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
 
-
+	Enemy enemy_;
 
 	//ウィンドウのxボタンが押されるまでループ
 	while (true) {
 
 		//Windowsのメッセージ処理
-		if (winApp->ProcessMessge()){
+		if (winApp->ProcessMessge()) {
 			//ゲームループを抜ける
 			break;
 		}
-		
+
 		//ゲームの処理
 
 		//入力の更新
@@ -607,16 +609,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//ImGui::ShowDemoWindow();
 		ImGui::Begin("Window");
 		//変える変数の名前,変えるデータ,変える速度
-		ImGui::ColorEdit3("color", &materialData->x);
+		//ImGui::ColorEdit3("color", &materialData->x);
 		//ImGui::DragFloat3("CameraTranslate", &cameraTransform, 0.01f);
 		//ImGui::DragFloat3("CameraTranslate", &cameraRotate.x, 0.01f);
 		//ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
-		ImGui::DragFloat3("spriteRotato", &transformSprite.rotate.x, 0.01f);
-		ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
-		ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
-		ImGui::DragFloat3("modelRotato", &transform.rotate.x, 0.01f);
-		ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
-		ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
+		//ImGui::DragFloat3("spriteRotato", &transformSprite.rotate.x, 0.01f);
+		//ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
+		//ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
+		//ImGui::DragFloat3("modelRotato", &transform.rotate.x, 0.01f);
+		//ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
+		//ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
+
+		//ImGui::Text("0で次のフェーズ、１でループを抜ける");
+		if (input->ReleseKey(DIK_ESCAPE)) {
+			break;
+		}
+		enemy_.Update();
+
+		if (input->ReleseKey(DIK_SPACE)) {
+			enemy_.ChangePhase();
+		}
+
+
 		ImGui::End();
 
 		//transform.rotate.y += 0.03f;
