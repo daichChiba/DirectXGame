@@ -626,6 +626,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 		enemy_.Update();
 
+
 		if (input->ReleseKey(DIK_SPACE)) {
 			enemy_.ChangePhase();
 		}
