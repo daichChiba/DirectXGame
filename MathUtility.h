@@ -23,6 +23,9 @@ namespace MathUtility {
 	// 3.Z軸回転行列
 	Matrix4x4 MakeRotateZMatrix(float radian);
 
+	// 単位行列を作成する関数
+	Matrix4x4 MakeIdentity4x4();
+
 
 	//3次元アフィン変換行列
 	Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);

@@ -14,6 +14,9 @@ public://メンバ関数
 	/// </summary>
 	void Initialize(SpriteCommon* spriteCommon);
 
+
+	void Updete();
+
 	struct VertexData {
 		Vector4 position;
 		Vector2 texcoord;
@@ -21,7 +24,16 @@ public://メンバ関数
 	};
 	struct Material {
 		Vector4 color;
+		int32_t enableLighting;
+		float padding[3];
+		Matrix4x4 uvTransform;
 	};
+
+	struct TransformationMatrix {
+		Matrix4x4 WVP;
+		Matrix4x4 World;
+	};
+
 private:
 	void CreateVertexData();
 
@@ -31,9 +43,19 @@ private:
 	DirectXCommon* dxCommon_ = nullptr;
 
 	//Sprite用の頂点リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
+	// マテリアルリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+	// バッファリソース内のデータを指すポインタ
+	Material* materialData = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+	// バッファリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_;
+	// バッファリソース内のデータを指すポインタ
+	TransformationMatrix* transformtionMatrixData_ = nullptr;
+
+	//　Sprite用のインデックスリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
 	//　頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	uint32_t* indexData = nullptr;
