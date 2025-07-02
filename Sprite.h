@@ -2,6 +2,7 @@
 #include "MathUtility.h"
 #include <cstdint>
 #include<wrl.h>
+#include"externals/DirectXTex/d3dx12.h"
 
 //using namespace MathUtility;
 class SpriteCommon;
@@ -14,8 +15,15 @@ public://メンバ関数
 	/// </summary>
 	void Initialize(SpriteCommon* spriteCommon);
 
-
+	/// <summary>
+	/// 更新処理
+	/// </summary>
 	void Updete();
+
+	/// <summary>
+	/// 描画
+	/// </summary>
+	void Draw();
 
 	struct VertexData {
 		Vector4 position;
@@ -60,8 +68,10 @@ private:
 	VertexData* vertexData = nullptr;
 	uint32_t* indexData = nullptr;
 
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 
 };
 

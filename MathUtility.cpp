@@ -4,14 +4,7 @@
 #include <cmath>
 
 namespace MathUtility {
-	Matrix4x4 MakeIdentity4x4() {
-		Matrix4x4 ret;
-		ret.m[0][0] = 1.0f;
-		ret.m[1][1] = 1.0f;
-		ret.m[2][2] = 1.0f;
-		ret.m[3][3] = 1.0f;
-		return ret;
-	}
+
 
 	Matrix4x4 Multply(const Matrix4x4& m1, const Matrix4x4& m2) {
 		Matrix4x4 ret = {};

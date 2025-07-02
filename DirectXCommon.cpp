@@ -3,7 +3,7 @@
 #include"Logger.h"
 #include"StringUtility.h"
 #include <format>
-#include"WinApp.h"
+
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
 
@@ -383,10 +383,6 @@ void DirectXCommon::Finalize(){
 
 
 	//開放処理
-	CloseHandle(fenceEvent);
-}
-
-void DirectXCommon::Finalize(){
 	CloseHandle(fenceEvent);
 }
 
